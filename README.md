@@ -1,5 +1,5 @@
-<<<<<<< HEAD
-# cherrybooker-fe
+# CherryBooker-FE
+체리부커 프론트엔드
 
 This template should help get you started developing with Vue 3 in Vite.
 
@@ -37,7 +37,3 @@ npm run dev
 ```sh
 npm run build
 ```
-=======
-# CherryBooker-FE
-체리부커 프론트엔드
->>>>>>> 2d8f90cdc0f69cff68b33f63832af6ad88f0136c
