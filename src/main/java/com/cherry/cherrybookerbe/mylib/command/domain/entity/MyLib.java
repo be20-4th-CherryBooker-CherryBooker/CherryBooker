@@ -1,5 +1,7 @@
 package com.cherry.cherrybookerbe.mylib.command.domain.entity;
 
+import com.cherry.cherrybookerbe.common.model.entity.BaseTimeEntity;
+import com.cherry.cherrybookerbe.user.command.domain.entity.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -23,7 +25,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED) // 엔티티를 마음대로 new로 만들지 못하게 막고, 대신 JPA 내부 동작(프록시, 리플렉션)이 필요한 곳에서만 생성할 수 있게 하려는 목적
 @Entity
 @Table(name = "my_lib")
-public class MyLib {
+public class MyLib extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -41,14 +43,7 @@ public class MyLib {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "book_status", nullable = false, length = 10)
-    @Builder.Default
-    private BookStatus bookStatus = BookStatus.READING;
-
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
-
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    private BookStatus bookStatus;
 
     @Builder
     public MyLib(User user, Book book, BookStatus bookStatus) {
@@ -65,17 +60,8 @@ public class MyLib {
 
     @PrePersist
     protected void onCreate() {
-        if (createdAt == null) {
-            createdAt = LocalDateTime.now();
-        }
-        updatedAt = createdAt;
         if (bookStatus == null) {
             bookStatus = BookStatus.WISH;      // entity 생성시 초기화 상태는 WISH (읽고 싶은 책)
         }
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
     }
 }

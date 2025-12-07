@@ -1,5 +1,6 @@
 package com.cherry.cherrybookerbe.mylib.command.domain.entity;
 
+import com.cherry.cherrybookerbe.common.model.entity.BaseTimeEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -17,7 +18,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
 @Table(name = "book")
-public class Book {
+public class Book extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -36,21 +37,11 @@ public class Book {
     @Column(name = "cover_image_url", nullable = false, length = 500)
     private String coverImageUrl;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
-
     @Builder
     public Book(String title, String author, String isbn, String coverImageUrl) {
         this.title = title;
         this.author = author;
         this.isbn = isbn;
         this.coverImageUrl = coverImageUrl;
-    }
-
-    @PrePersist
-    protected void onCreate() {
-        if (createdAt == null) {
-            createdAt = LocalDateTime.now();
-        }
     }
 }
