@@ -5,6 +5,8 @@ import com.cherry.cherrybookerbe.quote.query.dto.QuoteDetailResponse;
 import com.cherry.cherrybookerbe.quote.query.dto.QuoteListResponse;
 import com.cherry.cherrybookerbe.quote.query.repository.QuoteQueryRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -32,19 +34,16 @@ public class QuoteQueryService {
         );
     }
 
-    //특정 사용자 글귀 목록 조회
+    // 내 글귀 전체 조회
     public List<QuoteListResponse> getQuotesByUser(Long userId) {
-
-        List<Quote> quotes = repository.findByUserIdAndIsDeletedFalseOrderByCreatedAtDesc(userId);
-
-        return quotes.stream()
-                .map(q -> new QuoteListResponse(
-                        q.getQuoteId(),
-                        q.getContent(),
-                        q.getBookTitle(),
-                        q.getAuthor(),
-                        q.getCreatedAt().toString()
-                ))
+        return repository.findByUserIdAndIsDeletedFalse(userId).stream()
+                .map(QuoteListResponse::from)
                 .collect(Collectors.toList());
+    }
+
+    // 내 글귀 페이징 조회 (무한스크롤)
+    public Page<QuoteListResponse> getQuotesByUserPaged(Long userId, Pageable pageable) {
+        return repository.findByUserIdAndIsDeletedFalse(userId, pageable)
+                .map(QuoteListResponse::from);
     }
 }
