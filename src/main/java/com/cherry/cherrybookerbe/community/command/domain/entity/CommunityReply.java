@@ -1,4 +1,4 @@
-package com.cherry.cherrybookerbe.community.domain.entity;
+package com.cherry.cherrybookerbe.community.command.domain.entity;
 
 import com.cherry.cherrybookerbe.common.model.entity.BaseTimeEntity;
 import jakarta.persistence.*;
