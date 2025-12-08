@@ -1,8 +1,0 @@
-# src/main/resources/application-local.yml
-
-spring:
-  datasource:
-    url: jdbc:mariadb://localhost:3306/cherry_booker
-    username: swcamp
-    password: swcamp
-    driver-class-name: org.mariadb.jdbc.Driver
