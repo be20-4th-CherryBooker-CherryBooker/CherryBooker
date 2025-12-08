@@ -39,3 +39,4 @@ out/
 ## do not track application.yaml or properties
 *.yml
 *.properties
+.gitmessage.txt
