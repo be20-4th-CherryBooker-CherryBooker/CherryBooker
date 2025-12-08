@@ -5,6 +5,7 @@
 
 ### 1. 프로젝트 클론
 **cmd에
+
 git clone https://github.com/be20-4th-CherryBooker-CherryBooker/EasyOCR-fastapi-service.git
 
 cd EasyOCR-fastapi-service
