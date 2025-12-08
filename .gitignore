@@ -36,7 +36,6 @@ out/
 ### VS Code ###
 .vscode/
 
-## do not track application.yaml or properties
-*.yml
-*.properties
+## do not track application application-local.yml
+src/main/resources/application-local.yml
 .gitmessage.txt

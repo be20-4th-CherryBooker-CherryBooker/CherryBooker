@@ -1,6 +1,6 @@
 package com.cherry.cherrybookerbe.report.domain;
 
-import com.cherry.cherrybookerbe.community.domain.entity.CommunityThread;
+import com.cherry.cherrybookerbe.community.command.domain.entity.CommunityThread;
 import com.cherry.cherrybookerbe.user.command.domain.entity.User;
 import jakarta.persistence.*;
 import lombok.*;

@@ -1,0 +1,29 @@
+# src/main/resources/application.yml
+
+server:
+  port: 8080
+
+spring:
+  profiles:
+    active: local
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+  application:
+    name: CHERRY-BOOKER-SERVICE
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MariaDBDialect
+
+eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: http://localhost:8761/eureka
