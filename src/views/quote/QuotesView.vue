@@ -1,7 +1,7 @@
 <template>
   <div class="quotes-container">
 
-    <!-- 상단 제목 + active underline -->
+    <!-- 상단 제목 -->
     <div class="page-title">
       <span>내 글귀</span>
     </div>
@@ -23,19 +23,18 @@
       </div>
 
       <div class="add-btn-box">
-        <button class="add-btn" @click="goToCreateQuote">추가하기</button>
+        <button class="add-btn" @click.stop="openCreateModal">추가하기</button>
       </div>
-
     </div>
 
     <!-- 글귀 카드 리스트 -->
     <div class="quotes-grid">
       <div
           class="quote-card"
-          v-for="quote in filteredQuotes"
+          v-for="quote in quotes"
           :key="quote.quoteId"
       >
-        <div class="quote-title">{{ quote.bookTitle }} – {{ quote.author }}</div>
+        <div class="quote-title">📚 {{ quote.bookTitle }} – {{ quote.author }}</div>
 
         <div class="quote-content">
           "{{ quote.content }}"
@@ -46,60 +45,91 @@
         </div>
       </div>
     </div>
+
+    <!-- 무한 스크롤의 관찰 대상 -->
+    <div id="infinite-observer"></div>
+
+    <!-- 글귀 등록 모달 -->
+    <QuoteCreateModal
+        :show="showCreateModal"
+        @close="showCreateModal = false"
+        @created="refreshQuotes"
+    />
+
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from "vue";
+import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
+import QuoteCreateModal from "@/components/QuoteCreateModal.vue";
 
 const router = useRouter();
+
+// 모달 상태
+const showCreateModal = ref(false);
+
+const openCreateModal = () => {
+  showCreateModal.value = true;
+};
+
+// 무한 스크롤 상태
+const quotes = ref([]);
+const page = ref(0);
+const size = 9;
+const isLast = ref(false);
+const isLoading = ref(false);
+
 const keyword = ref("");
 
-// ⭐ 백엔드에서 받아오는 내 글귀 리스트 (예시 데이터)
-const quotes = ref([
-  {
-    quoteId: 1,
-    bookTitle: "달까지 가자",
-    author: "장류진",
-    content: "내가 나에게 조금 더 친절해도 괜찮다는 걸, 아주 늦게야 깨달았다.",
-  },
-  {
-    quoteId: 2,
-    bookTitle: "아몬드",
-    author: "손원평",
-    content:
-        "상처는 느끼지 못해도, 누군가의 온기는 분명히 기억된다는 걸 알게 되었다.",
-  },
-  {
-    quoteId: 3,
-    bookTitle: "해리포터와 아즈카반의 죄수",
-    author: "J.K. 롤링",
-    content:
-        "두려움이 크다는 건, 그만큼 지키고 싶은 것이 있다는 뜻이었다.",
-  },
-]);
+// API 요청 (백엔드 주소만 바꿔주면 됨)
+const loadQuotes = async () => {
+  if (isLast.value || isLoading.value) return;
 
-// 검색 필터
-const filteredQuotes = computed(() => {
-  if (!keyword.value) return quotes.value;
-  return quotes.value.filter((q) =>
-      q.bookTitle.toLowerCase().includes(keyword.value.toLowerCase())
-  );
-});
+  isLoading.value = true;
 
-// 글귀 추가 페이지 이동
-const goToCreateQuote = () => router.push("/quotes/new");
+  const res = await fetch('/quote.json');
+  const data = await res.json();
 
-// 글귀 상세 모달/페이지 이동
-const openDetail = (quote) => {
-  router.push(`/quotes/${quote.quoteId}`);
+  quotes.value.push(...data.content);  // ← quotes!
+  isLast.value = data.last;
+
+  page.value++;
+  isLoading.value = false;
 };
 
-// 검색 기능 (원하면 API 연동 가능)
+// 검색
 const searchQuotes = () => {
-  console.log("검색어:", keyword.value);
+  quotes.value = [];
+  page.value = 0;
+  isLast.value = false;
+  loadQuotes();
 };
+
+// 상세 이동
+const openDetail = (quote) => router.push(`/quotes/${quote.quoteId}`);
+
+// 글귀 등록 후 목록 새로고침
+const refreshQuotes = () => {
+  quotes.value = [];
+  page.value = 0;
+  isLast.value = false;
+  loadQuotes();
+};
+
+// IntersectionObserver 등록
+onMounted(() => {
+  const target = document.querySelector("#infinite-observer");
+
+  const observer = new IntersectionObserver((entries) => {
+    if (entries[0].isIntersecting) {
+      loadQuotes();
+    }
+  });
+
+  observer.observe(target);
+  loadQuotes();
+});
 </script>
 
 <style scoped>
@@ -110,6 +140,10 @@ const searchQuotes = () => {
   padding: 30px 20px;
   font-family: "Pretendard", sans-serif;
   text-align: center;
+}
+
+#infinite-observer {
+  height: 1px;
 }
 
 /* 제목 */
