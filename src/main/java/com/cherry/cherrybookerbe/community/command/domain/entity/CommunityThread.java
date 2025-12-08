@@ -7,6 +7,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,8 +22,15 @@ public class CommunityThread extends BaseTimeEntity {
     @Column(name = "threads_id")
     private Integer id;
 
-    @Column(name = "threads_reply_id")
-    private Integer threadsReplyId;
+    // 부모 스레드 (최초 스레드는 null)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parent_id")
+    private CommunityThread parent;
+
+    // 자식 스레드들(릴레이)
+    @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("createdAt ASC")
+    private List<CommunityThread> children = new ArrayList<>();
 
     // 유저 PK
     @Column(name = "user_id", nullable = false, updatable = false)
@@ -40,29 +48,50 @@ public class CommunityThread extends BaseTimeEntity {
     @Column(name = "report_count", nullable = false)
     private int reportCount = 0;
 
-    // 스레드에 달린 답변들
-    @OneToMany(mappedBy = "thread", cascade = CascadeType.ALL)
-    private List<CommunityReply> replies = new ArrayList<>();
-
     @Builder
-    private CommunityThread(Integer threadsReplyId,
+    private CommunityThread(CommunityThread parent,
                             Integer userId,
                             Integer quoteId) {
-        this.threadsReplyId = threadsReplyId;
+        this.parent = parent;   // null 이면 최초 스레드
         this.userId = userId;
         this.quoteId = quoteId;
     }
 
+    // 루트 스레드인지 여부 (최초 스레드)
+    public boolean isRoot() {
+        return this.parent == null;
+    }
 
-    public void markDeleted() {
+    // 내용(quote) 수정
+    public void updateThread(Integer newQuoteId) {
+        this.quoteId = newQuoteId;
+    }
+
+    // 자기 자신만 소프트 삭제
+    public void markDeletedOnly() {
         this.deleted = true;
+    }
+
+    // 자기 + 모든 자식(릴레이)까지 소프트 삭제
+    public void markDeletedCascade() {
+        markDeletedOnly();
+        for (CommunityThread child : children) {
+            child.markDeletedCascade();
+        }
     }
 
     public void increaseReportCount() {
         this.reportCount++;
     }
 
-    public void addReply(CommunityReply reply) {
-        this.replies.add(reply);
+    // 양방향 연관관계 편의 메서드
+    public void addChild(CommunityThread child) {
+        this.children.add(child);
+        child.parent = this;
+    }
+
+    // "수정됨" 여부
+    public boolean isUpdated() {
+        return updatedAt != null && !updatedAt.equals(createdAt);
     }
 }
