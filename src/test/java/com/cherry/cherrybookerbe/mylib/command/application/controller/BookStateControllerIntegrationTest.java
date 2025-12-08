@@ -6,8 +6,8 @@ import com.cherry.cherrybookerbe.mylib.command.domain.repository.MyLibRepository
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.jdbc.Sql;
@@ -34,7 +34,7 @@ class BookStateControllerIntegrationTest {
 
     @Test
     @WithMockUser(username = "tester@example.com")
-    @DisplayName("LIB-001: 사용자는 책 제목을 검색하여 나의 서재에 책을 등록할 수 있다. 나의 서재에 등록된 도서는 처음에는 \"읽고 싶은 책\" 상태로 등록된다.")
+    @DisplayName("MYLIB-CMD-001: 나의 서재에 책을 등록하면 기본 상태는 WISH다")
     void registerBook_addsNewWishEntry() throws Exception {
         mockMvc.perform(post("/mylib/register-books")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -54,19 +54,9 @@ class BookStateControllerIntegrationTest {
         assertThat(myLib.get().getBookStatus()).isEqualTo(BookStatus.WISH);
     }
 
-    // ToDo: LIB-005  테스트 구현 피요
-    /*
     @Test
     @WithMockUser(username = "tester@example.com")
-    @DisplayName("LIB-005: 사용자는 특정 책을 다 읽으면 “읽은 책(Read)” 상태로 설정할 수 있다. ")
-    void finishedReading() throws Exception {
-        mockMvc.
-    }
-     */
-
-    @Test
-    @WithMockUser(username = "tester@example.com")
-    @DisplayName("LIB-006: 글귀 등록 트리거로 WISH 상태를 READING으로 전환한다, 사용자가 \"읽고 싶은 책(Wish)\"을 클릭하고 등록하고자 하는 글귀를 촬영, 글귀와 관련된 코멘트를 작성 완료하면, 작성 완료 즉시 \"읽고 싶은 책\"이 \"읽는 중\"인 책으로 변경된다. ")
+    @DisplayName("MYLIB-CMD-002: 글귀 등록 트리거로 WISH 상태를 READING으로 전환한다")
     void changeBookStatus_movesWishToReading() throws Exception {
         mockMvc.perform(patch("/mylib/books/{myLibId}/status", 10L)
                         .contentType(MediaType.APPLICATION_JSON)
