@@ -1,6 +1,7 @@
 package com.cherry.cherrybookerbe.quote.command.controller;
 
 import com.cherry.cherrybookerbe.quote.command.dto.CreateQuoteRequest;
+import com.cherry.cherrybookerbe.quote.command.dto.CreateQuoteResponse;
 import com.cherry.cherrybookerbe.quote.command.service.QuoteCommandService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -16,9 +17,9 @@ public class QuoteCommandController {
 
     // 글귀 등록
     @PostMapping
-    public ResponseEntity<Long> createQuote(@RequestBody CreateQuoteRequest request) {
+    public ResponseEntity<CreateQuoteResponse> createQuote(@RequestBody CreateQuoteRequest request) {
         Long quoteId = quoteCommandService.createQuote(request);
-        return ResponseEntity.ok(quoteId);
+        return ResponseEntity.ok(new CreateQuoteResponse(quoteId));
     }
 
     // 글귀 삭제
