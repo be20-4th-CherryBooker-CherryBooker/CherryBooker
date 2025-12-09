@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+// 도메인 로직을 처리하므로 Domain layer의 서비스로 추가
 @Service
 @Transactional
 @RequiredArgsConstructor

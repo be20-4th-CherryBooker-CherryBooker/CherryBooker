@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+// 도메인 로직을 처리하므로 Domain layer의 서비스로 추가
 @Service
 @Transactional
 @RequiredArgsConstructor
@@ -18,13 +19,17 @@ public class RegisterNewBookService {
     private final SearchBookRepository searchBookRepository;
     private final LibraryOpenApiClient bookApiClient;
 
+    // 키워드를 받아서
+    // 주의: 일단 책 제목만으로는 부족해서 ISBN을 받는 것으로 구현
     public Book findOrCreate(String keyword, String isbnHint) {
         if (!StringUtils.hasText(keyword)) {
             throw new BadRequestException("도서 제목이 필요합니다.");
         }
 
         if (StringUtils.hasText(isbnHint)) {
+            // 1. CherryBooker 자체 데이터베이스에서 찾거나
             return searchBookRepository.findByIsbn(isbnHint.trim())
+                    // 2. 없으면 경기도사이버 도서관에서 검색하여 자체 데이터베이스에 저장 후 출력
                     .orElseGet(() -> createBookFromApi(keyword, isbnHint));
         }
 
@@ -32,6 +37,7 @@ public class RegisterNewBookService {
                 .orElseGet(() -> createBookFromApi(keyword, isbnHint));
     }
 
+    // 경기도 사이버 도서관에 도서 검색 후 CherryBooker 자체 데이터베이스에 저장
     private Book createBookFromApi(String keyword, String isbnHint) {
         BookMetadataResponse metadata = bookApiClient.search(keyword, isbnHint);
         Book book = Book.builder()
