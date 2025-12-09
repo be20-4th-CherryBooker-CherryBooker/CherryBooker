@@ -5,9 +5,9 @@ import lombok.Getter;
 // 신고 등록 ; 신고 1건 생성
 @Getter
 public class CreateReportRequest {
-    private Long targetUserId; // 신고받은 유저 id fk
-    private Long threadId; // 스레드 id fk
-    private Long threadsReplyId; // 스레드 답글 id fk
+    private Long reporterId; // 신고자
+    private Long threadId; // 스레드 게시글 신고 시 사용
+    private Long threadsReplyId; // 스레드 답글 신고 시 사용
 
     public CreateReportRequest() {}
 }
