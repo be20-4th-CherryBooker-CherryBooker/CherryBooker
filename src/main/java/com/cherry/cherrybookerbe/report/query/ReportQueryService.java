@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 // 5회 이상 신고 받은 목록 조회
+/*
 @Service
 @Transactional(readOnly = true)
 public class ReportQueryService {
