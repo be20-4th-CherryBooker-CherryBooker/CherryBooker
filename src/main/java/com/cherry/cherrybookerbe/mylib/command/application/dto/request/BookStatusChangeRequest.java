@@ -5,7 +5,7 @@ import com.cherry.cherrybookerbe.mylib.command.domain.entity.BookStatus;
 import jakarta.validation.constraints.NotNull;
 
 public record BookStatusChangeRequest(
-        @NotNull BookStatus targetStatus,
+        BookStatus targetStatus,
         StatusTrigger trigger
 ) {
 
