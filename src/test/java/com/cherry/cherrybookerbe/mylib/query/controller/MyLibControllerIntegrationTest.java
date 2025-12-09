@@ -23,7 +23,7 @@ class MyLibControllerIntegrationTest {
 
     @Test
     @WithMockUser(username = "tester@example.com")
-    @DisplayName("MYLIB-QUERY-001: 나의 서재 목록을 조회하면 상태별 카드가 내려온다")
+    @DisplayName("LIB-002: 나의 서재 목록을 조회하면 상태별 카드가 내려온다")
     void getMyLibrary_returnsPagedBooks() throws Exception {
         mockMvc.perform(get("/mylib/books")
                         .param("userId", "1"))
@@ -39,7 +39,7 @@ class MyLibControllerIntegrationTest {
 
     @Test
     @WithMockUser(username = "tester@example.com")
-    @DisplayName("MYLIB-QUERY-002: 특정 도서의 글귀 목록을 조회한다")
+    @DisplayName("LIB-004: 특정 도서의 글귀 목록을 조회한다")
     void getBookQuotes_returnsQuoteList() throws Exception {
         mockMvc.perform(get("/mylib/books/{myLibId}/quotes", 11L))
                 .andExpect(status().isOk())
