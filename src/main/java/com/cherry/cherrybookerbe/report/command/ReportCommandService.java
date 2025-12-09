@@ -16,22 +16,20 @@ public class ReportCommandService {
 
     private final ReportCommandRepository reportCommandRepository;
     private final ReportQueryRepository reportQueryRepository;
-    // user, thread 레포지토리 선언 필요
+    /*
+    *  private final UserRepository userRepository;
+    private final CommunityThreadRepository threadRepository;
+    private final CommunityReplyRepository replyRepository;
+    private final ThreadService threadService;
+    private final UserService userService;*/
+
+
     public ReportCommandService(
             ReportCommandRepository reportCommandRepository,
-            ReportQueryRepository reportQueryRepository),
-            /*
-            *  UserRepository userRepository,
-            CommunityThreadRepository threadRepository,
-            CommunityReplyRepository replyRepository*/
+            ReportQueryRepository reportQueryRepository)
     {
         this.reportCommandRepository = reportCommandRepository;
         this.reportQueryRepository = reportQueryRepository;
-        /*
-        this.userRepository = userRepository;
-        this.threadRepository = threadRepository;
-        this.replyRepository = replyRepository;
-        * */
     }
 
     // 신고 등록
@@ -40,13 +38,7 @@ public class ReportCommandService {
         Long threadId =  createRequest.getThreadId();
         Long threadReplyId = createRequest.getThreadsReplyId();
 
-        //  user, thread, threadReply repository가 없으므로 임시 더미 객체 (컴파일용)
-        //레포지토리 생기면 삭제 예정
-        User reporter = null;
-        CommunityThread reportedThread = null;
-        CommunityReply reportedReply = null;
-
-        //
+        //신고 검증
         if (threadId == null && threadReplyId == null) {
             throw new IllegalArgumentException("신고 대상이 존재하지 않습니다.");
         }
@@ -55,20 +47,31 @@ public class ReportCommandService {
         if (threadId != null && threadReplyId != null) {
             throw new IllegalArgumentException("게시글과 댓글은 동시에 신고할 수 없습니다.");
         }
+        //  user, thread, threadReply repository가 없으므로 임시 더미 객체 (컴파일용)
+        //레포지토리 생기면 삭제 예정
+        User reporter = null;
+        CommunityThread reportedThread = null;
+        CommunityReply reportedReply = null;
 
         // user, thread 리포지토리 미생성에 따른 주석 처리
         /*신고자 조회
         User reporter = userRepository.findById(reporterId)
                 .orElseThrow(() -> new IllegalArgumentException("신고자 유저 없음"));
-        */
+        CommunityThread reportedThread = null;
+        CommunityReply reportedReply = null;
+
 
         if(threadId != null) {
             /* 신고 게시글 레포지토리
-            CommunityThread reportedThread = threadRepository.findById(threadId)
+            reportedThread = threadRepository.findById(threadId)
                 .orElseThrow(() -> new IllegalArgumentException("신고 대상 게시글 없음"));
-            * */
+        if (threadReplyId != null) {
+            reportedReply = replyRepository.findById(threadReplyId)
+                    .orElseThrow(() -> new IllegalArgumentException("신고 대상 댓글 없음"));
+        }  */
 
-            // 게시글 신고
+        // 게시글 신고
+        if (threadId != null) {
             Report report = Report.builder()
                     .user(reporter) //신고자
                     .threads(reportedThread) //신고 대상 게시글
@@ -76,14 +79,9 @@ public class ReportCommandService {
                     .status(ReportStatus.PENDING) // 게시글
                     .build();
             reportCommandRepository.save(report);
-            return;
         }
+        // 댓글 신고
         if(threadReplyId != null) {
-
-            /* 신고 댓글 레포지토리
-            CommunityReply reportedReply = replyRepository.findById(threadReplyId)
-                    .orElseThrow(() -> new IllegalArgumentException("신고 대상 댓글 없음"));
-            */
             Report report = Report.builder()
                     .user(reporter)
                     .threads(null)
@@ -91,7 +89,6 @@ public class ReportCommandService {
                     .status(ReportStatus.PENDING)
                     .build();
             reportCommandRepository.save(report);
-            return;
         }
 
     }
@@ -119,9 +116,10 @@ public class ReportCommandService {
             if(report.getThreads() != null) {
                 CommunityThread reportedThreads = report.getThreads();
 
-                //팀원 설계에 따른 임시 선언(수정 필요)
-                Integer reportedUserId = reportedThread.getUser();
-
+                /*
+                Long reportedUserId = targetThread.getUserId();
+                User reportedUser = userRepository.findById(reportedUserId)
+                        .orElseThrow(() -> new IllegalArgumentException("유저 없음"));
                 /*
                 threadService.delete(reportedThread);
                 userService.increaseDeleteCount(reportedUser);
@@ -131,9 +129,11 @@ public class ReportCommandService {
             //댓글 신고
             if(report.getThreadsReply() != null) {
                 CommunityReply reportedReply = report.getThreadsReply();
-                //팀원 설계에 따른 임시 선언(수정 필요)
-                Integer reportedUserId = reportedReply.getUserId();
 
+                /*
+                Long reportedUserId = reportedReply.getUserId();
+                User reportedUser = userRepository.findById(reportedUserId) // ✅ 제재 대상 유저
+                        .orElseThrow(() -> new IllegalArgumentException("유저 없음"));
                 // 팀원 서비스 연결 전까지는 주석 유지
                 /*
                 threadService.delete(reportedReply);
