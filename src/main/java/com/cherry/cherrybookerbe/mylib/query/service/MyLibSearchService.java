@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
+@Transactional(readOnly = true)             // 조회용 쿼리만을 사용하기 때문에 readonly 설정
 public class MyLibSearchService {
 
     private static final String EMPTY_NOTICE = "더 이상 불러올 도서가 없습니다.";
@@ -35,7 +35,7 @@ public class MyLibSearchService {
     private final QuoteQueryRepository quoteQueryRepository;
 
     // 나의 서재 검색
-    // ToDo: Authenticated user만 받도록 리팩토링이 필요 
+    // ToDo: Authenticated user만 받도록 리팩토링이 필요
     public MyLibrarySliceResponse getMyLibrary(MyLibrarySearchRequest request) {
         if (request.getUserId() == null) {
             throw new BadRequestException("userId는 필수입니다.");
@@ -85,7 +85,10 @@ public class MyLibSearchService {
         );
     }
 
+    // 나의 서재 도서 조회
+     // subquery 존재도 없고 단순 조회이므로 MyBatis, native query 대신 JPQL을 사용하는 방향으로 작성
     private MyLib fetchMyLib(Long myLibId) {
+        // join fetch를 사용하여 부분 성능 최적화 지향. (Lazy loading에 의한 성능 저하 방지의 목적)
         TypedQuery<MyLib> query = entityManager.createQuery(
                 "select ml from MyLib ml join fetch ml.book b where ml.myLibId = :myLibId",
                 MyLib.class
