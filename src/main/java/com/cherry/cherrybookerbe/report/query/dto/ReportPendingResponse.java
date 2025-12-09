@@ -18,9 +18,10 @@ public class ReportPendingResponse {
     private int deleteCount; // 삭제 당한 횟수
 
     private LocalDateTime createdAt;
-    private String content;
+    private String quoteContent;
 
     private ReportStatus status; // pending, valid, rejected
+    private String adminComment; // 관리자 코멘트
 
     // 기본 생성자
     public ReportPendingResponse() {
@@ -34,8 +35,9 @@ public class ReportPendingResponse {
             int reportCount,
             int deleteCount,
             LocalDateTime createdAt,
-            String content,
-            ReportStatus status
+            String quoteContent,
+            ReportStatus status,
+            String adminComment
     ) {
         this.reportedUserId = reportedUserId;
         this.targetNickname = targetNickname;
@@ -44,8 +46,9 @@ public class ReportPendingResponse {
         this.reportCount = reportCount;
         this.deleteCount = deleteCount;
         this.createdAt = createdAt;
-        this.content = content;
+        this.quoteContent = quoteContent;
         this.status = status;
+        this.adminComment = adminComment;
     }
 
 }
