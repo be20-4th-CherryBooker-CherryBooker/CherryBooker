@@ -54,6 +54,16 @@ class BookStateControllerIntegrationTest {
         assertThat(myLib.get().getBookStatus()).isEqualTo(BookStatus.WISH);
     }
 
+    // ToDo: LIB-005  테스트 구현 피요
+    /*
+    @Test
+    @WithMockUser(username = "tester@example.com")
+    @DisplayName("LIB-005: 사용자는 특정 책을 다 읽으면 “읽은 책(Read)” 상태로 설정할 수 있다. ")
+    void finishedReading() throws Exception {
+        mockMvc.
+    }
+     */
+
     @Test
     @WithMockUser(username = "tester@example.com")
     @DisplayName("LIB-006: 글귀 등록 트리거로 WISH 상태를 READING으로 전환한다, 사용자가 \"읽고 싶은 책(Wish)\"을 클릭하고 등록하고자 하는 글귀를 촬영, 글귀와 관련된 코멘트를 작성 완료하면, 작성 완료 즉시 \"읽고 싶은 책\"이 \"읽는 중\"인 책으로 변경된다. ")
