@@ -36,22 +36,28 @@ public class Report extends BaseTimeEntity {
     @Column(name = "status", nullable = false)
     private ReportStatus status;
 
+    //관리자 처리 코멘트
+    @Column(length = 500)
+    private String adminComment;
+
     @Builder
-    public Report(User user, CommunityThread threads, CommunityReply threadsReply, ReportStatus status) {
+    public Report(User user, CommunityThread threads, CommunityReply threadsReply, ReportStatus status, String adminComment) {
         this.user = user;
         this.threads = threads;
         this.threadsReply = threadsReply;
         this.status = status;
-
+        this.adminComment = adminComment;
     }
 
     // 신고 승인 처리
     public void approve() {
         this.status = ReportStatus.VALID;
+        this.adminComment = adminComment;
     }
     // 신고 반려 처리
     public void reject() {
         this.status = ReportStatus.REJECTED;
+        this.adminComment = adminComment;
     }
 
 }
