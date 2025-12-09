@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 // 신고 처리 목록 조회 dto
 @Getter
 public class ReportPendingResponse {
-    private Long targetUserId; // 유저 id fk
+    private Long reportedUserId; // 유저 id fk
     private Long threadId; // 스레드 id fk
     private Long threadReplyId; // 스레드 답글 id fk
     private LocalDateTime createdAt;
@@ -20,7 +20,7 @@ public class ReportPendingResponse {
     }
     // 전체 생성자
     public ReportPendingResponse(
-            Long targetUserId,
+            Long reportedUserId,
             Long threadId,
             Long threadReplyId,
             LocalDateTime createdAt,
@@ -28,7 +28,7 @@ public class ReportPendingResponse {
             String targetNickname,
             String content
     ) {
-        this.targetUserId = targetUserId;
+        this.reportedUserId = reportedUserId;
         this.threadId = threadId;
         this.threadReplyId = threadReplyId;
         this.createdAt = createdAt;
