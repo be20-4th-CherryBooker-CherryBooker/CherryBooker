@@ -3,7 +3,9 @@ package com.cherry.cherrybookerbe.report.query;
 import com.cherry.cherrybookerbe.community.command.domain.entity.CommunityReply;
 import com.cherry.cherrybookerbe.community.command.domain.entity.CommunityThread;
 import com.cherry.cherrybookerbe.quote.command.entity.Quote;
+import com.cherry.cherrybookerbe.report.domain.ReportStatus;
 import com.cherry.cherrybookerbe.report.query.dto.ReportPendingResponse;
+import com.cherry.cherrybookerbe.report.query.dto.ReportSummaryResponse;
 import com.cherry.cherrybookerbe.user.command.domain.entity.User;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -88,5 +90,15 @@ public class ReportQueryService {
         }
         return result;
     }
-}
-*/
+    public ReportSummaryResponse getReportSummary() {
+
+        long total = reportQueryRepository.count();
+        long pending = reportQueryRepository.countByStatus(ReportStatus.PENDING);
+        long completed = reportQueryRepository.countByStatusIn(
+            List.of(ReportStatus.VALID, ReportStatus.REJECTED)
+        );
+        return new ReportSummaryResponse(total, pending, completed);
+    }
+
+}*/
+
