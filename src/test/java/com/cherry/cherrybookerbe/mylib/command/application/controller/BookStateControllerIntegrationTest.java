@@ -1,5 +1,6 @@
 package com.cherry.cherrybookerbe.mylib.command.application.controller;
 
+import com.cherry.cherrybookerbe.mylib.command.application.dto.response.BookMetadataResponse;
 import com.cherry.cherrybookerbe.mylib.command.domain.entity.BookStatus;
 import com.cherry.cherrybookerbe.mylib.command.domain.entity.MyLib;
 import com.cherry.cherrybookerbe.mylib.command.domain.repository.MyLibRepository;
@@ -11,16 +12,13 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.BDDMockito.given;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -41,23 +39,14 @@ class BookStateControllerIntegrationTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @MockitoBean
+    @Autowired
     private LibraryOpenApiClient libraryOpenApiClient;
-
-    private static final LibraryOpenApiClient.BookMetadata SAMPLE_BOOK =
-            new LibraryOpenApiClient.BookMetadata(
-                    "초보자를 위한 Java 200제",
-                    "조효은",
-                    "9788956747859",
-                    "https://www.library.kr/attachfile/DRMContent/ebook/4808956747859/L4808956747859.jpg"
-            );
 
     @Test
     @WithMockUser(username = "tester@example.com")
     @DisplayName("LIB-001~006: 사용자는 도서를 등록하고 글귀 등록 트리거를 거쳐 읽는 중/읽은 책 상태로 전환할 수 있다.")
     void register_and_progress_book_lifecycle() throws Exception {
-        given(libraryOpenApiClient.search("초보자를 위한 Java 200제", "9788956747859"))
-                .willReturn(SAMPLE_BOOK);
+        BookMetadataResponse sampleBook = libraryOpenApiClient.search("초보자를 위한 Java 200제", "9788956747859");
 
         MvcResult registerResult = mockMvc.perform(post("/mylib/register-books")
                         .with(csrf())
@@ -107,7 +96,7 @@ class BookStateControllerIntegrationTest {
 
         MyLib progressed = myLibRepository.findWithBookByMyLibId(myLibId).orElseThrow();
         assertThat(progressed.getBookStatus()).isEqualTo(BookStatus.READ);
-        assertThat(progressed.getBook().getTitle()).isEqualTo(SAMPLE_BOOK.title());
-        assertThat(progressed.getBook().getCoverImageUrl()).isEqualTo(SAMPLE_BOOK.coverImageUrl());
+        assertThat(progressed.getBook().getTitle()).isEqualTo(sampleBook.title());
+        assertThat(progressed.getBook().getCoverImageUrl()).isEqualTo(sampleBook.coverImageUrl());
     }
 }

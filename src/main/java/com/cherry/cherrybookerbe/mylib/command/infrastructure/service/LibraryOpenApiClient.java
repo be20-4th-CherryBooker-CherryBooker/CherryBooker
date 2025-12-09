@@ -2,6 +2,7 @@ package com.cherry.cherrybookerbe.mylib.command.infrastructure.service;
 
 import com.cherry.cherrybookerbe.common.exception.BadRequestException;
 import com.cherry.cherrybookerbe.common.exception.ExternalApiException;
+import com.cherry.cherrybookerbe.mylib.command.application.dto.response.BookMetadataResponse;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
@@ -40,26 +41,38 @@ public class LibraryOpenApiClient {
                 .build();
     }
 
-    public BookMetadata search(String keyword, String isbnHint) {
+    public BookMetadataResponse search(String keyword, String isbnHint) {
         if (!StringUtils.hasText(keyword)) {
             throw new BadRequestException("도서 제목이 필요합니다.");
         }
 
-        UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(baseUrl)
+        JsonNode docNode = searchOnce(searchType(isbnHint), searchKeyword(keyword, isbnHint));
+        if (docNode == null && StringUtils.hasText(isbnHint)) {
+            docNode = searchOnce("title", keyword.trim());
+        }
+        if (docNode == null) {
+            throw new ExternalApiException("검색 조건에 맞는 도서를 찾지 못했습니다.");
+        }
+
+        String title = firstText(docNode, keyword, "titleInfo", "title", "TITLE");
+        String author = firstText(docNode, "미상", "authorInfo", "author", "AUTHOR");
+        String isbn = firstText(docNode, StringUtils.hasText(isbnHint) ? isbnHint : keyword, "isbn", "isbn13", "isbn10", "ISBN");
+        String coverImageUrl = firstText(docNode, defaultCoverImage, "imageUrl", "cover", "bookImageURL", "COVER_URL");
+
+        return new BookMetadataResponse(title, author, isbn, coverImageUrl);
+    }
+
+    private JsonNode searchOnce(String searchType, String searchKeyword) {
+        URI uri = UriComponentsBuilder.fromHttpUrl(baseUrl)
                 .queryParam("ServiceKey", apiKey)
                 .queryParam("pageNo", 1)
                 .queryParam("numOfRows", 1)
-                .queryParam("ebookType", "ebook");
-
-        if (StringUtils.hasText(isbnHint)) {
-            builder.queryParam("searchType", "isbn")
-                    .queryParam("searchKeyword", isbnHint.trim());
-        } else {
-            builder.queryParam("searchType", "title")
-                    .queryParam("searchKeyword", keyword.trim());
-        }
-
-        URI uri = builder.build(true).toUri();
+                .queryParam("ebookType", "ebook")
+                .queryParam("searchType", searchType)
+                .queryParam("searchKeyword", searchKeyword)
+                .build()
+                .encode()
+                .toUri();
 
         String payload;
         try {
@@ -68,19 +81,10 @@ public class LibraryOpenApiClient {
             throw new ExternalApiException("국립도서관 API 호출에 실패했습니다.", e);
         }
 
-        JsonNode docNode = extractDocNode(payload);
-        String title = firstText(docNode, keyword, "titleInfo", "title", "TITLE");
-        String author = firstText(docNode, "미상", "authorInfo", "author", "AUTHOR");
-        String isbn = firstText(docNode, StringUtils.hasText(isbnHint) ? isbnHint : keyword, "isbn", "isbn13", "isbn10", "ISBN");
-        String coverImageUrl = firstText(docNode, defaultCoverImage, "imageUrl", "cover", "bookImageURL", "COVER_URL");
-
-        return new BookMetadata(title, author, isbn, coverImageUrl);
-    }
-
-    private JsonNode extractDocNode(String payload) {
         if (!StringUtils.hasText(payload)) {
-            throw new ExternalApiException("국립도서관 API 응답이 비어 있습니다.");
+            return null;
         }
+
         try {
             JsonNode root = objectMapper.readTree(payload);
             List<String> candidates = Arrays.asList("/data", "/result/docs", "/docs", "/channel/item", "/items", "/item");
@@ -96,7 +100,7 @@ public class LibraryOpenApiClient {
         } catch (Exception e) {
             throw new ExternalApiException("국립도서관 API 응답을 파싱하지 못했습니다.", e);
         }
-        throw new ExternalApiException("검색 조건에 맞는 도서를 찾지 못했습니다.");
+        return null;
     }
 
     private String firstText(JsonNode node, String defaultValue, String... fieldNames) {
@@ -110,11 +114,12 @@ public class LibraryOpenApiClient {
         }
         return defaultValue;
     }
-    public record BookMetadata(
-            String title,
-            String author,
-            String isbn,
-            String coverImageUrl
-    ) {
+
+    private String searchType(String isbnHint) {
+        return StringUtils.hasText(isbnHint) ? "isbn" : "title";
+    }
+
+    private String searchKeyword(String keyword, String isbnHint) {
+        return StringUtils.hasText(isbnHint) ? isbnHint.trim() : keyword.trim();
     }
 }
