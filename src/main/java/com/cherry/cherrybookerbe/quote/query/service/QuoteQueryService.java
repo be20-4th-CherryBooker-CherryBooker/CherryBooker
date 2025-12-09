@@ -24,15 +24,7 @@ public class QuoteQueryService {
         Quote quote = repository.findById(quoteId)
                 .orElseThrow(() -> new RuntimeException("Quote not found"));
 
-        return new QuoteDetailResponse(
-                quote.getQuoteId(),
-                quote.getContent(),
-                quote.getBookTitle(),
-                quote.getAuthor(),
-                quote.getComment(),
-                quote.getImagePath(),
-                quote.getCreatedAt().toString()
-        );
+        return QuoteDetailResponse.from(quote);
     }
 
     // 내 글귀 전체 조회

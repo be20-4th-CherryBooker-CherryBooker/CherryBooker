@@ -13,7 +13,8 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class FileUploadService {
 
-    private final String uploadBasePath = "/uploads/quotes/";
+    // 프로젝트 내부에 저장
+    private final String uploadBasePath = "uploads/quotes/";
 
     public String save(MultipartFile file) {
 

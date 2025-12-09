@@ -5,9 +5,11 @@ import com.cherry.cherrybookerbe.quote.command.entity.Quote;
 import com.cherry.cherrybookerbe.quote.command.repository.QuoteCommandRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class QuoteCommandService {
 
     private final QuoteCommandRepository repository;
