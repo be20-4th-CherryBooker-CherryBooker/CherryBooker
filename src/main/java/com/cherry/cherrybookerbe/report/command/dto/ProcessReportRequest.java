@@ -6,8 +6,8 @@ import lombok.Getter;
 // 관리자 판단 dto. 관리자가valid, reject할지 선택
 @Getter
 public class ProcessReportRequest {
-    private Long targetUserId;
-    private ReportStatus status;
+    private Long reportId; // 처리할 신고 1건
+    private ReportStatus status; // valid, rejected
 
     public ProcessReportRequest() {}
 
