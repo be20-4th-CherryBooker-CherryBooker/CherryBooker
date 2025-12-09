@@ -34,7 +34,7 @@ class BookStateControllerIntegrationTest {
 
     @Test
     @WithMockUser(username = "tester@example.com")
-    @DisplayName("MYLIB-CMD-001: 나의 서재에 책을 등록하면 기본 상태는 WISH다")
+    @DisplayName("LIB-001: 사용자는 책 제목을 검색하여 나의 서재에 책을 등록할 수 있다. 나의 서재에 등록된 도서는 처음에는 \"읽고 싶은 책\" 상태로 등록된다.")
     void registerBook_addsNewWishEntry() throws Exception {
         mockMvc.perform(post("/mylib/register-books")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -56,7 +56,7 @@ class BookStateControllerIntegrationTest {
 
     @Test
     @WithMockUser(username = "tester@example.com")
-    @DisplayName("MYLIB-CMD-002: 글귀 등록 트리거로 WISH 상태를 READING으로 전환한다")
+    @DisplayName("LIB-006: 글귀 등록 트리거로 WISH 상태를 READING으로 전환한다, 사용자가 \"읽고 싶은 책(Wish)\"을 클릭하고 등록하고자 하는 글귀를 촬영, 글귀와 관련된 코멘트를 작성 완료하면, 작성 완료 즉시 \"읽고 싶은 책\"이 \"읽는 중\"인 책으로 변경된다. ")
     void changeBookStatus_movesWishToReading() throws Exception {
         mockMvc.perform(patch("/mylib/books/{myLibId}/status", 10L)
                         .contentType(MediaType.APPLICATION_JSON)
