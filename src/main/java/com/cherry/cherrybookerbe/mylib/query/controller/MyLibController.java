@@ -1,5 +1,6 @@
 package com.cherry.cherrybookerbe.mylib.query.controller;
 
+import com.cherry.cherrybookerbe.common.dto.ApiResponse;
 import com.cherry.cherrybookerbe.mylib.command.domain.entity.BookStatus;
 import com.cherry.cherrybookerbe.mylib.query.dto.request.MyLibrarySearchRequest;
 import com.cherry.cherrybookerbe.mylib.query.dto.response.MyBookDetailResponse;
@@ -21,7 +22,7 @@ public class MyLibController {
     private final MyLibSearchService myLibSearchService;
 
     @GetMapping("/books")
-    public ResponseEntity<MyLibrarySliceResponse> getMyLibrary(
+    public ResponseEntity<ApiResponse<MyLibrarySliceResponse>> getMyLibrary(
             @RequestParam Long userId,
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) BookStatus status,
@@ -29,11 +30,11 @@ public class MyLibController {
             @RequestParam(defaultValue = "8") int size
     ) {
         MyLibrarySearchRequest request = new MyLibrarySearchRequest(userId, keyword, status, page, size);
-        return ResponseEntity.ok(myLibSearchService.getMyLibrary(request));
+        return ResponseEntity.ok(ApiResponse.success(myLibSearchService.getMyLibrary(request)));
     }
 
     @GetMapping("/books/{myLibId}/quotes")
-    public ResponseEntity<MyBookDetailResponse> getBookQuotes(@PathVariable Long myLibId) {
-        return ResponseEntity.ok(myLibSearchService.getBookDetail(myLibId));
+    public ResponseEntity<ApiResponse<MyBookDetailResponse>> getBookQuotes(@PathVariable Long myLibId) {
+        return ResponseEntity.ok(ApiResponse.success(myLibSearchService.getBookDetail(myLibId)));
     }
 }

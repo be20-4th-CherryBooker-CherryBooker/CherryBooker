@@ -69,12 +69,12 @@ class BookStateControllerIntegrationTest {
                                 }
                                 """))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.status").value("WISH"))
-                .andExpect(jsonPath("$.newlyRegistered").value(true))
+                .andExpect(jsonPath("$.data.status").value("WISH"))
+                .andExpect(jsonPath("$.data.newlyRegistered").value(true))
                 .andReturn();
 
         JsonNode registeredPayload = objectMapper.readTree(registerResult.getResponse().getContentAsString());
-        long myLibId = registeredPayload.get("myLibId").asLong();
+        long myLibId = registeredPayload.get("data").get("myLibId").asLong();
 
         mockMvc.perform(patch("/mylib/books/{myLibId}/status", myLibId)
                         .with(csrf())
@@ -86,9 +86,9 @@ class BookStateControllerIntegrationTest {
                                 }
                                 """))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.previousStatus").value("WISH"))
-                .andExpect(jsonPath("$.currentStatus").value("READING"))
-                .andExpect(jsonPath("$.badgeIssued").value(false));
+                .andExpect(jsonPath("$.data.previousStatus").value("WISH"))
+                .andExpect(jsonPath("$.data.currentStatus").value("READING"))
+                .andExpect(jsonPath("$.data.badgeIssued").value(false));
 
         mockMvc.perform(patch("/mylib/books/{myLibId}/status", myLibId)
                         .with(csrf())
@@ -99,10 +99,10 @@ class BookStateControllerIntegrationTest {
                                 }
                                 """))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.changed").value(true))
-                .andExpect(jsonPath("$.previousStatus").value("READING"))
-                .andExpect(jsonPath("$.currentStatus").value("READ"))
-                .andExpect(jsonPath("$.badgeIssued").value(true));
+                .andExpect(jsonPath("$.data.changed").value(true))
+                .andExpect(jsonPath("$.data.previousStatus").value("READING"))
+                .andExpect(jsonPath("$.data.currentStatus").value("READ"))
+                .andExpect(jsonPath("$.data.badgeIssued").value(true));
 
         MyLib progressed = myLibRepository.findWithBookByMyLibId(myLibId).orElseThrow();
         assertThat(progressed.getBookStatus()).isEqualTo(BookStatus.READ);

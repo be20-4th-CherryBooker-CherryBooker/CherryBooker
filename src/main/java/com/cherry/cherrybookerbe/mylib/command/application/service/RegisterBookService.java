@@ -9,7 +9,7 @@ import com.cherry.cherrybookerbe.mylib.command.domain.entity.MyLib;
 import com.cherry.cherrybookerbe.mylib.command.domain.repository.MyLibRepository;
 import com.cherry.cherrybookerbe.mylib.command.domain.service.RegisterNewBookService;
 import com.cherry.cherrybookerbe.user.command.domain.entity.User;
-import com.cherry.cherrybookerbe.user.command.domain.repository.UserRepository;
+import com.cherry.cherrybookerbe.user.command.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
