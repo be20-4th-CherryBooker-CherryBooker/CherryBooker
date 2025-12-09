@@ -34,6 +34,8 @@ public class MyLibSearchService {
 
     private final QuoteQueryRepository quoteQueryRepository;
 
+    // 나의 서재 검색
+    // ToDo: Authenticated user만 받도록 리팩토링이 필요 
     public MyLibrarySliceResponse getMyLibrary(MyLibrarySearchRequest request) {
         if (request.getUserId() == null) {
             throw new BadRequestException("userId는 필수입니다.");
@@ -62,6 +64,7 @@ public class MyLibSearchService {
         );
     }
 
+    // 나의 서재에 등록되어 있는 책의 세부 정보 조회
     public MyBookDetailResponse getBookDetail(Long myLibId) {
         MyLib myLib = fetchMyLib(myLibId);
         List<QuoteSnippetResponse> quotes = quoteQueryRepository

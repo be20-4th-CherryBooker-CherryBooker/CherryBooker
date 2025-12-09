@@ -20,7 +20,7 @@ public class BookStateController {
     private final BookStatusService bookStatusService;
 
     @PostMapping("/register-books")
-    public ResponseEntity<RegisterBookResponse> registerBook(@Valid @RequestBody RegisterBookRequest request) {
+    public ResponseEntity<RegisterBookResponse> registerBook(@RequestBody RegisterBookRequest request) {
         RegisterBookResponse response = registerBookService.register(request);
         HttpStatus status = response.newlyRegistered() ? HttpStatus.CREATED : HttpStatus.OK;
         return ResponseEntity.status(status).body(response);
@@ -28,7 +28,7 @@ public class BookStateController {
 
     @PatchMapping("/books/{myLibId}/status")
     public ResponseEntity<BookStatusChangeResponse> changeBookStatus(@PathVariable Long myLibId,
-                                                                     @Valid @RequestBody BookStatusChangeRequest request) {
+                                                                     @RequestBody BookStatusChangeRequest request) {
         return ResponseEntity.ok(bookStatusService.changeStatus(myLibId, request));
     }
 }
