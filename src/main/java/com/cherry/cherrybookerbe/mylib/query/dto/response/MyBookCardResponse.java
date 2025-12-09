@@ -2,9 +2,7 @@ package com.cherry.cherrybookerbe.mylib.query.dto.response;
 
 import com.cherry.cherrybookerbe.mylib.command.domain.entity.BookStatus;
 import com.cherry.cherrybookerbe.mylib.command.domain.entity.MyLib;
-import lombok.AccessLevel;
 import lombok.Builder;
-import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
