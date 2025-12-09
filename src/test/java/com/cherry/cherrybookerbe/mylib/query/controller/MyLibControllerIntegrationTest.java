@@ -3,8 +3,8 @@ package com.cherry.cherrybookerbe.mylib.query.controller;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
@@ -28,13 +28,16 @@ class MyLibControllerIntegrationTest {
         mockMvc.perform(get("/mylib/books")
                         .param("userId", "1"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.totalCount").value(2))
-                .andExpect(jsonPath("$.dummySlots").value(6))
-                .andExpect(jsonPath("$.books[0].title").value("이펙티브 자바"))
-                .andExpect(jsonPath("$.books[0].displayType").value("SPINE"))
-                .andExpect(jsonPath("$.books[0].badgeIssued").value(true))
-                .andExpect(jsonPath("$.books[1].title").value("자바의 정석"))
-                .andExpect(jsonPath("$.books[1].displayType").value("COVER"));
+                .andExpect(jsonPath("$.totalCount").value(3))
+                .andExpect(jsonPath("$.dummySlots").value(5))
+                .andExpect(jsonPath("$.books[0].title").value("클린 코드"))
+                .andExpect(jsonPath("$.books[0].displayType").value("COVER"))
+                .andExpect(jsonPath("$.books[0].badgeIssued").value(false))
+                .andExpect(jsonPath("$.books[1].title").value("이펙티브 자바"))
+                .andExpect(jsonPath("$.books[1].displayType").value("SPINE"))
+                .andExpect(jsonPath("$.books[1].badgeIssued").value(true))
+                .andExpect(jsonPath("$.books[2].title").value("자바의 정석"))
+                .andExpect(jsonPath("$.books[2].displayType").value("COVER"));
     }
 
     @Test
