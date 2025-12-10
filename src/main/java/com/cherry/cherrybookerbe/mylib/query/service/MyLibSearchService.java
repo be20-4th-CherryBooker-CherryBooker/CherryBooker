@@ -118,7 +118,7 @@ public class MyLibSearchService {
         }
 
         private void assignParameters(TypedQuery<?> query) {
-            query.setParameter("userId", Math.toIntExact(request.getUserId()));
+            query.setParameter("userId", request.getUserId());
             if (request.getStatus() != null) {
                 query.setParameter("status", request.getStatus());
             }

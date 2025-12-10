@@ -8,13 +8,13 @@ public class MyLibrarySearchRequest {
 
     private static final int DEFAULT_SIZE = 8;
 
-    private final Long userId;
+    private final Integer userId;
     private final String keyword;
     private final BookStatus status;
     private final int page;
     private final int size;
 
-    public MyLibrarySearchRequest(Long userId,
+    public MyLibrarySearchRequest(Integer userId,
                                   String keyword,
                                   BookStatus status,
                                   int page,
