@@ -41,7 +41,7 @@ public class ReportQueryService {
             ReportPendingResponse response = jdbcTemplate.queryForObject(
                     """
                
-                            SELECT 
+                   SELECT 
                    u.user_id AS reportedUserId,
                    u.user_nickname AS targetNickname,
                    t.threads_id AS threadId,
@@ -50,7 +50,7 @@ public class ReportQueryService {
                    q.content AS quoteContent
                FROM threads t
                JOIN users u ON t.user_id = u.user_id
-               JOIN quotes q ON t.quote_id = q.quote_id
+               JOIN quote q ON t.quote_id = q.quote_id
                WHERE t.threads_id = ?
                """,
 
@@ -87,7 +87,7 @@ public class ReportQueryService {
                         q.content AS quoteContent
                     FROM threads_reply r
                     JOIN users u ON r.user_id = u.user_id
-                    JOIN quotes q ON r.quote_id = q.quote_id
+                    JOIN quote q ON r.quote_id = q.quote_id
                     WHERE r.threads_reply_id = ?
                     """,
 
@@ -125,22 +125,23 @@ public class ReportQueryService {
 
         return jdbcTemplate.queryForObject(
                 """
-                SELECT 
+                
+                SELECT\s
                     u.user_id AS reportedUserId,
                     u.user_nickname AS targetNickname,
                     t.threads_id AS threadId,
-                    r.threads_reply_id AS threadReplyId,
-                    COALESCE(t.report_count, r.report_count) AS reportCount,
+                    rep.threads_reply_id AS threadReplyId,
+                    COALESCE(t.report_count, tr.report_count) AS reportCount,
                     0 AS deleteCount,
-                    COALESCE(t.created_at, r.created_at) AS createdAt,
+                    COALESCE(t.created_at, tr.created_at) AS createdAt,
                     q.content AS quoteContent,
                     rep.status AS status,
                     rep.admin_comment AS adminComment
                 FROM report rep
                 LEFT JOIN threads t ON rep.threads_id = t.threads_id
-                LEFT JOIN threads_reply r ON rep.threads_reply_id = r.threads_reply_id
-                JOIN users u ON u.user_id = COALESCE(t.user_id, r.user_id)
-                JOIN quotes q ON q.quote_id = COALESCE(t.quote_id, r.quote_id)
+                LEFT JOIN threads_reply tr ON rep.threads_reply_id = tr.threads_reply_id
+                JOIN users u ON u.user_id = COALESCE(t.user_id, tr.user_id)
+                JOIN quote q ON q.quote_id = COALESCE(t.quote_id, tr.quote_id)
                 WHERE rep.report_id = ?
                 """,
 
