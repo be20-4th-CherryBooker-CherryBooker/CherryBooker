@@ -71,6 +71,13 @@ const isRegistering = ref(false);
 const errorMessage = ref("");
 const fallbackCover = "/images/default-book.png";
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "/api";
+const FALLBACK_USER_ID = import.meta.env.VITE_MYLIB_USER_ID ?? null;
+
+if (!FALLBACK_USER_ID) {
+  console.warn(
+    "[MyLib] VITE_MYLIB_USER_ID is not set. Registering books requires authentication."
+  );
+}
 
 const close = () => {
   keyword.value = "";
@@ -87,7 +94,7 @@ const search = async () => {
     console.info("[MyLib] Searching external books:", keyword.value);
     const { data } = await axios.get(`${API_BASE_URL}/mylib/library-books`, {
       params: { keyword: keyword.value, size: 10 },
-      withCredentials: true,
+      withCredentials: false,
     });
     const payload = data?.data ?? data;
     results.value = Array.isArray(payload) ? payload : [];
@@ -111,7 +118,10 @@ const registerBook = async (book) => {
         keyword: book.title,
         isbnHint: book.isbn,
       },
-      { withCredentials: true }
+      {
+        params: { userId: FALLBACK_USER_ID || undefined },
+        withCredentials: true,
+      }
     );
     emit("added");
     close();

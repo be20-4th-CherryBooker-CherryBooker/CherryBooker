@@ -8,26 +8,19 @@
           @error="handleImageError"
       />
 
-      <div
-          v-if="book.status"
-          class="status-pill"
-        :class="book.status.toLowerCase()"
-      >
-        {{ statusLabel }}
-      </div>
-
       <div v-if="book.badgeIssued" class="badge-check">
         ✓
       </div>
 
-      <button
-          v-if="book.status === 'READING'"
-          class="complete-btn"
-          :disabled="completing"
-          @click.stop="$emit('complete', book)"
-      >
-        {{ completing ? "변경 중..." : "완독" }}
-      </button>
+      <div v-if="book.status === 'READING'" class="complete-overlay">
+        <button
+            class="complete-btn"
+            :disabled="completing"
+            @click.stop="$emit('complete', book)"
+        >
+          {{ completing ? "변경 중..." : "완독" }}
+        </button>
+      </div>
     </div>
 
     <div class="book-title">{{ book.title }}</div>
@@ -56,14 +49,7 @@ const currentCover = ref(props.book.coverImageUrl || fallbackCover);
 
 const resolvedCover = computed(() => currentCover.value || fallbackCover);
 
-const statusLabel = computed(() => {
-  const map = {
-    WISH: "읽고 싶은",
-    READING: "읽는 중",
-    READ: "완독",
-  };
-  return map[props.book.status] || "읽기";
-});
+console.log("[BookCard] status:", props.book.status, "title:", props.book.title);
 
 const handleImageError = () => {
   currentCover.value = fallbackCover;
@@ -109,34 +95,6 @@ const handleImageError = () => {
   object-fit: cover;
 }
 
-.status-pill {
-  position: absolute;
-  bottom: 12px;
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 4px 16px;
-  border-radius: 12px;
-  background: #f49f9f;
-  color: #fff;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: -0.3px;
-}
-
-.status-pill.read {
-  background: #f4959f;
-}
-
-.status-pill.reading {
-  background: #fdd26a;
-  color: #5c4204;
-}
-
-.status-pill.wish {
-  background: #dadada;
-  color: #686868;
-}
-
 .badge-check {
   position: absolute;
   top: 8px;
@@ -153,12 +111,23 @@ const handleImageError = () => {
   font-weight: 700;
 }
 
-.complete-btn {
+.complete-overlay {
   position: absolute;
-  bottom: 16px;
-  left: 50%;
-  transform: translate(-50%, 0);
-  padding: 8px 20px;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0);
+  opacity: 0;
+  pointer-events: none;
+  transition: background 0.2s ease, opacity 0.2s ease;
+}
+
+.complete-btn {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+  padding: 10px 22px;
   border-radius: 20px;
   border: none;
   background: rgba(28, 28, 28, 0.92);
@@ -166,17 +135,20 @@ const handleImageError = () => {
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.2s ease;
 }
 
-.book-card:hover .complete-btn {
+.cover-wrapper:hover .complete-overlay {
+  opacity: 1;
+  pointer-events: auto;
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.cover-wrapper:hover .complete-btn {
   opacity: 1;
   pointer-events: auto;
 }
 
-.book-card:hover .status-pill.reading {
+.cover-wrapper:hover .status-pill.reading {
   opacity: 0;
 }
 

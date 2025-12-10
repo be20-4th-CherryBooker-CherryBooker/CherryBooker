@@ -85,9 +85,10 @@ import ScrollArrow from "@/components/mylib/ScrollArrow.vue";
 const PAGE_SIZE = 8;
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "/api";
 const FALLBACK_USER_ID = import.meta.env.VITE_MYLIB_USER_ID ?? null;
+
 if (!FALLBACK_USER_ID) {
   console.warn(
-    "[MyLib] No VITE_MYLIB_USER_ID provided. Backend requests require authentication."
+    "[MyLib] VITE_MYLIB_USER_ID is not set. Requests require authentication or a fallback ID."
   );
 }
 
