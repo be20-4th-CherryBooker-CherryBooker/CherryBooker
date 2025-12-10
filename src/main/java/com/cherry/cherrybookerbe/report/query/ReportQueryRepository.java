@@ -9,25 +9,27 @@ import java.util.List;
 // 5회 이상 신고 받은 글 목록(pending상태) 조회
 public interface ReportQueryRepository extends JpaRepository<Report, Long> {
 
-    @Query("""
-            SELECT r.threads.id
-            FROM Report r
-            WHERE r.status = 'PENDING'
-            AND r.threads IS NOT NULL
-            GROUP BY r.threads.id
-            HAVING COUNT(r.reportId) >=5
-            """)
+    @Query(value = """
+    SELECT r.threads_id
+    FROM report r
+    JOIN threads t ON r.threads_id = t.threads_id
+    WHERE r.status = 'PENDING'
+      AND t.report_count >= 5
+      AND t.is_deleted = 0
+    """, nativeQuery = true)
     List<Long> findPendingThreadIdsReportedOverFive();
 
-    @Query("""
-        SELECT r.threadsReply.id
-        FROM Report r
-        WHERE r.status = 'PENDING'
-        AND r.threadsReply IS NOT NULL
-        GROUP BY r.threadsReply.id
-        HAVING COUNT(r.reportId) >= 5
-    """)
+
+    @Query(value = """
+    SELECT r.threads_reply_id
+    FROM report r
+    JOIN threads_reply tr ON r.threads_reply_id = tr.threads_reply_id
+    WHERE r.status = 'PENDING'
+      AND tr.report_count >= 5
+      AND tr.is_deleted = 0
+    """, nativeQuery = true)
     List<Long> findPendingReplyIdsReportedOverFive();
+
 
     // 통계
     // 전체 신고 수
