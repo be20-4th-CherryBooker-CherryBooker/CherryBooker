@@ -40,6 +40,7 @@
 
 <script setup>
 import { ref } from "vue";
+import router from "@/router/index.js";
 
 const username = ref("");
 const password = ref("");
@@ -51,6 +52,8 @@ const login = () => {
   }
 
   alert("관리자 로그인 진행! (백엔드 연결 예정)");
+  // 로그인 성공 처리 후 이동
+  router.push("/admin/reports");
 };
 </script>
 
