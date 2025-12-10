@@ -15,10 +15,6 @@ public class BaseTimeEntity {
     @Column(name = "created_at", nullable = false, updatable = false)
     protected LocalDateTime createdAt;
 
-    // 게시물 삭제 여부
-    @Column(name = "is_deleted", nullable = false)
-    private boolean isDeleted;
-
     // 소프트 삭제 메서드
     @Column(name = "is_deleted", nullable = false)
     private boolean deleted = false;
