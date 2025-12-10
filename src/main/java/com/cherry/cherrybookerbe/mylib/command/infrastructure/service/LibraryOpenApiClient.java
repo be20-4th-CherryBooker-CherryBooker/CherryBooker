@@ -14,11 +14,14 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 @Service
 public class LibraryOpenApiClient {
+
+    private static final int MAX_PAGE_SIZE = 30;
 
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
@@ -46,27 +49,36 @@ public class LibraryOpenApiClient {
             throw new BadRequestException("도서 제목이 필요합니다.");
         }
 
-        JsonNode docNode = searchOnce(searchType(isbnHint), searchKeyword(keyword, isbnHint));
+        JsonNode docNode = searchDocs(searchType(isbnHint), searchKeyword(keyword, isbnHint), 1)
+                .stream()
+                .findFirst()
+                .orElse(null);
         if (docNode == null && StringUtils.hasText(isbnHint)) {
-            docNode = searchOnce("title", keyword.trim());
+            docNode = searchDocs("title", keyword.trim(), 1).stream().findFirst().orElse(null);
         }
         if (docNode == null) {
             throw new ExternalApiException("검색 조건에 맞는 도서를 찾지 못했습니다.");
         }
 
-        String title = firstText(docNode, keyword, "titleInfo", "title", "TITLE");
-        String author = firstText(docNode, "미상", "authorInfo", "author", "AUTHOR");
-        String isbn = firstText(docNode, StringUtils.hasText(isbnHint) ? isbnHint : keyword, "isbn", "isbn13", "isbn10", "ISBN");
-        String coverImageUrl = firstText(docNode, defaultCoverImage, "imageUrl", "cover", "bookImageURL", "COVER_URL");
-
-        return new BookMetadataResponse(title, author, isbn, coverImageUrl);
+        return toMetadata(docNode, keyword, isbnHint);
     }
 
-    private JsonNode searchOnce(String searchType, String searchKeyword) {
+    public List<BookMetadataResponse> searchBooksByTitle(String keyword, int size) {
+        if (!StringUtils.hasText(keyword)) {
+            throw new BadRequestException("도서 제목이 필요합니다.");
+        }
+        int normalizedSize = Math.min(Math.max(size, 1), MAX_PAGE_SIZE);
+        List<JsonNode> docs = searchDocs("title", keyword.trim(), normalizedSize);
+        return docs.stream()
+                .map(doc -> toMetadata(doc, keyword, null))
+                .toList();
+    }
+
+    private List<JsonNode> searchDocs(String searchType, String searchKeyword, int size) {
         URI uri = UriComponentsBuilder.fromHttpUrl(baseUrl)
                 .queryParam("ServiceKey", apiKey)
                 .queryParam("pageNo", 1)
-                .queryParam("numOfRows", 1)
+                .queryParam("numOfRows", Math.max(1, size))
                 .queryParam("ebookType", "ebook")
                 .queryParam("searchType", searchType)
                 .queryParam("searchKeyword", searchKeyword)
@@ -82,25 +94,36 @@ public class LibraryOpenApiClient {
         }
 
         if (!StringUtils.hasText(payload)) {
-            return null;
+            return List.of();
         }
 
         try {
             JsonNode root = objectMapper.readTree(payload);
             List<String> candidates = Arrays.asList("/data", "/result/docs", "/docs", "/channel/item", "/items", "/item");
+            List<JsonNode> documents = new ArrayList<>();
             for (String path : candidates) {
                 JsonNode node = root.at(path);
                 if (node.isArray() && node.size() > 0) {
-                    return node.get(0);
+                    node.forEach(documents::add);
+                    return documents;
                 }
                 if (node.isObject() && node.size() > 0) {
-                    return node;
+                    documents.add(node);
+                    return documents;
                 }
             }
         } catch (Exception e) {
             throw new ExternalApiException("국립도서관 API 응답을 파싱하지 못했습니다.", e);
         }
-        return null;
+        return List.of();
+    }
+
+    private BookMetadataResponse toMetadata(JsonNode docNode, String keyword, String isbnHint) {
+        String title = firstText(docNode, keyword, "titleInfo", "title", "TITLE");
+        String author = firstText(docNode, "미상", "authorInfo", "author", "AUTHOR");
+        String isbn = firstText(docNode, StringUtils.hasText(isbnHint) ? isbnHint : keyword, "isbn", "isbn13", "isbn10", "ISBN");
+        String coverImageUrl = firstText(docNode, defaultCoverImage, "imageUrl", "cover", "bookImageURL", "COVER_URL");
+        return new BookMetadataResponse(title, author, isbn, coverImageUrl);
     }
 
     private String firstText(JsonNode node, String defaultValue, String... fieldNames) {
