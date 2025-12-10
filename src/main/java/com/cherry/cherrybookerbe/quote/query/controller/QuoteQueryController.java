@@ -1,5 +1,6 @@
 package com.cherry.cherrybookerbe.quote.query.controller;
 
+import com.cherry.cherrybookerbe.common.security.auth.UserPrincipal;
 import com.cherry.cherrybookerbe.quote.query.dto.QuoteDetailResponse;
 import com.cherry.cherrybookerbe.quote.query.dto.QuoteListResponse;
 import com.cherry.cherrybookerbe.quote.query.service.QuoteQueryService;
@@ -31,20 +32,20 @@ public class QuoteQueryController {
     // 내 글귀 전체 조회
     @GetMapping("/my/all")
     public ResponseEntity<List<QuoteListResponse>> getAllMyQuotes(
-            @AuthenticationPrincipal OAuth2User user
+            @AuthenticationPrincipal UserPrincipal principal
     ) {
-        Long userId = Long.valueOf(user.getAttribute("userId"));
+        Long userId = principal.userId().longValue();
         return ResponseEntity.ok(quoteQueryService.getQuotesByUser(userId));
     }
 
     // 내 글귀 페이징 조회 (검색 + 무한스크롤)
     @GetMapping("/my")
     public ResponseEntity<Page<QuoteListResponse>> getMyQuotesPaged(
-            @AuthenticationPrincipal OAuth2User user,
+            @AuthenticationPrincipal UserPrincipal principal,
             @PageableDefault(size = 12) Pageable pageable,
             @RequestParam(required = false) String keyword
     ) {
-        Long userId = Long.valueOf(user.getAttribute("userId"));
+        Long userId = principal.userId().longValue();
         return ResponseEntity.ok(
                 quoteQueryService.getQuotesByUserPaged(userId, keyword, pageable)
         );
@@ -55,8 +56,6 @@ public class QuoteQueryController {
     public Page<QuoteListResponse> searchQuotes(
             @RequestParam(required = false) String keyword,
             Pageable pageable) {
-
         return quoteQueryService.searchQuotes(keyword, pageable);
     }
-
 }
