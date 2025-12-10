@@ -2,10 +2,12 @@ package com.cherry.cherrybookerbe.mylib.query.controller;
 
 import com.cherry.cherrybookerbe.common.dto.ApiResponse;
 import com.cherry.cherrybookerbe.common.security.auth.UserPrincipal;
+import com.cherry.cherrybookerbe.mylib.command.application.dto.response.BookMetadataResponse;
 import com.cherry.cherrybookerbe.mylib.command.domain.entity.BookStatus;
 import com.cherry.cherrybookerbe.mylib.query.dto.request.MyLibrarySearchRequest;
 import com.cherry.cherrybookerbe.mylib.query.dto.response.MyBookDetailResponse;
 import com.cherry.cherrybookerbe.mylib.query.dto.response.MyLibrarySliceResponse;
+import com.cherry.cherrybookerbe.mylib.query.service.LibraryBookSearchService;
 import com.cherry.cherrybookerbe.mylib.query.service.MyLibSearchService;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
@@ -18,12 +20,15 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/mylib")
 public class MyLibController {
 
     private final MyLibSearchService myLibSearchService;
+    private final LibraryBookSearchService libraryBookSearchService;
 
     @Operation(operationId = " ", summary = " ", description = " ")
     @GetMapping("/books")
@@ -43,5 +48,14 @@ public class MyLibController {
     public ResponseEntity<ApiResponse<MyBookDetailResponse>> getBookQuotes(
             @Valid @PathVariable Long myLibId) {
         return ResponseEntity.ok(ApiResponse.success(myLibSearchService.getBookDetail(myLibId)));
+    }
+
+    @Operation(operationId = " ", summary = " ", description = " ")
+    @GetMapping("/library-books")
+    public ResponseEntity<ApiResponse<List<BookMetadataResponse>>> searchLibraryBooks(
+            @Valid @RequestParam String keyword,
+            @Valid @RequestParam(defaultValue = "10") int size
+    ) {
+        return ResponseEntity.ok(ApiResponse.success(libraryBookSearchService.searchByTitle(keyword, size)));
     }
 }
