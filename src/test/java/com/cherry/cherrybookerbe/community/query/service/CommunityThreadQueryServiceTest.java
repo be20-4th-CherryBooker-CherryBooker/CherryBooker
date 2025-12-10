@@ -1,11 +1,16 @@
 package com.cherry.cherrybookerbe.community.query.service;
 
+import com.cherry.cherrybookerbe.common.dto.Pagination;
 import com.cherry.cherrybookerbe.community.command.domain.entity.CommunityThread;
 import com.cherry.cherrybookerbe.community.command.domain.repository.CommunityThreadRepository;
 import com.cherry.cherrybookerbe.community.query.dto.CommunityReplyResponse;
 import com.cherry.cherrybookerbe.community.query.dto.CommunityThreadDetailResponse;
+import com.cherry.cherrybookerbe.community.query.dto.CommunityThreadListResponse;
 import com.cherry.cherrybookerbe.community.query.dto.CommunityThreadSummaryResponse;
+import com.cherry.cherrybookerbe.quote.command.entity.Quote;
+import com.cherry.cherrybookerbe.quote.query.repository.QuoteQueryRepository;
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
@@ -14,18 +19,27 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.server.ResponseStatusException;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class CommunityThreadQueryServiceTest {
 
     @Mock
     private CommunityThreadRepository communityThreadRepository;
+
+    @Mock
+    private QuoteQueryRepository quoteRepository;
 
     @InjectMocks
     private CommunityThreadQueryService communityThreadQueryService;
@@ -87,8 +101,8 @@ class CommunityThreadQueryServiceTest {
     }
 
     @Test
-    @DisplayName("CMT-004/CMT-006: 스레드 목록 조회 시 삭제되지 않은 루트 스레드만 요약 정보로 반환된다")
-    void getThreadList_returnsSummaryOfRootThreads() {
+    @DisplayName("CMT-004/CMT-006: 스레드 목록 조회 시 삭제되지 않은 루트 스레드만 요약 + 페이징 정보로 반환된다")
+    void getThreadList_returnsPagedSummaryOfRootThreads() {
         // given
         LocalDateTime now = LocalDateTime.now();
 
@@ -101,19 +115,37 @@ class CommunityThreadQueryServiceTest {
                 now.minusMinutes(5), now.minusMinutes(3)
         );
 
-        // 실제 DB 조건(parent is null, deleted=false, createdAt desc)은 Repository 쿼리에서 책임지고,
-        // 서비스에서는 매핑만 테스트한다.
-        when(communityThreadRepository.findByDeletedFalseAndParentIsNullOrderByCreatedAtDesc())
-                .thenReturn(List.of(thread2, thread1)); // 정렬된 상태라고 가정
+        // PageImpl 로 가짜 페이지 객체 구성
+        Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Page<CommunityThread> page = new PageImpl<>(
+                List.of(thread2, thread1), // createdAt DESC 정렬이라고 가정
+                pageable,
+                2
+        );
+
+        when(communityThreadRepository.findByDeletedFalseAndParentIsNull(any(Pageable.class)))
+                .thenReturn(page);
+
+        // Quote 엔티티는 Mockito 로 목 객체 생성 (ID, content 매핑만 사용)
+        Quote quote1 = mock(Quote.class);
+        Quote quote2 = mock(Quote.class);
+        when(quote1.getQuoteId()).thenReturn(10L);
+        when(quote2.getQuoteId()).thenReturn(20L);
+        when(quote1.getContent()).thenReturn("QUOTE-10");
+        when(quote2.getContent()).thenReturn("QUOTE-20");
+
+        // 어떤 ID 리스트가 와도 위 두 개를 반환하도록 설정
+        when(quoteRepository.findAllById(any()))
+                .thenReturn(List.of(quote1, quote2));
 
         // when
-        List<CommunityThreadSummaryResponse> result = communityThreadQueryService.getThreadList();
+        CommunityThreadListResponse result = communityThreadQueryService.getThreadList(0, 10);
 
-        // then
-        assertThat(result).hasSize(2);
+        // then: 스레드 요약 정보
+        assertThat(result.getThreads()).hasSize(2);
 
-        CommunityThreadSummaryResponse first = result.get(0);
-        CommunityThreadSummaryResponse second = result.get(1);
+        CommunityThreadSummaryResponse first = result.getThreads().get(0);
+        CommunityThreadSummaryResponse second = result.getThreads().get(1);
 
         // 첫 번째 요소가 thread2 인지 확인 (createdAt desc 가정)
         assertThat(first.getThreadId()).isEqualTo(2);
@@ -122,6 +154,7 @@ class CommunityThreadQueryServiceTest {
         assertThat(first.isUpdated()).isTrue();
         assertThat(first.isDeleted()).isFalse();
         assertThat(first.getReportCount()).isEqualTo(1);
+        assertThat(first.getQuoteContent()).isEqualTo("QUOTE-20");
 
         // 두 번째 요소
         assertThat(second.getThreadId()).isEqualTo(1);
@@ -130,9 +163,13 @@ class CommunityThreadQueryServiceTest {
         assertThat(second.isUpdated()).isFalse();
         assertThat(second.isDeleted()).isFalse();
         assertThat(second.getReportCount()).isEqualTo(0);
+        assertThat(second.getQuoteContent()).isEqualTo("QUOTE-10");
 
-        // CMT-006: 표시 정보는 userId, quoteId, createdAt, updated 여부 정도로 제한된 DTO 구조임
-        // (닉네임/책명은 이후 User/Quote 조인 후에 추가 테스트 작성)
+        // then: 페이징 정보
+        Pagination pagination = result.getPagination();
+        assertThat(pagination.getCurrentPage()).isEqualTo(0);
+        assertThat(pagination.getTotalPages()).isEqualTo(1);
+        assertThat(pagination.getTotalItems()).isEqualTo(2L);
     }
 
     @Test
@@ -151,12 +188,16 @@ class CommunityThreadQueryServiceTest {
                 now.minusMinutes(9)
         );
         CommunityThread reply2 = createReplyEntity(
-                3, root, 3, 30, true, false, // 삭제된 답변 (CMT-009 UI에서 "이 글귀는 삭제되었습니다"로 대체)
+                3, root, 3, 30, true, false, // 삭제된 답변 (CMT-009)
                 now.minusMinutes(8)
         );
 
         when(communityThreadRepository.findByIdAndDeletedFalse(1))
                 .thenReturn(Optional.of(root));
+
+        // quote 내용은 이 테스트에서 중요하지 않으므로 빈 리스트 반환
+        when(quoteRepository.findAllById(any()))
+                .thenReturn(Collections.emptyList());
 
         // when
         CommunityThreadDetailResponse result = communityThreadQueryService.getThreadDetail(1);

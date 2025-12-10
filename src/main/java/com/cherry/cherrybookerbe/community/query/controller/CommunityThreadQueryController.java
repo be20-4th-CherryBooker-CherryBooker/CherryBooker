@@ -2,14 +2,12 @@ package com.cherry.cherrybookerbe.community.query.controller;
 
 import com.cherry.cherrybookerbe.common.dto.ApiResponse;
 import com.cherry.cherrybookerbe.community.query.dto.CommunityThreadDetailResponse;
+import com.cherry.cherrybookerbe.community.query.dto.CommunityThreadListResponse;
 import com.cherry.cherrybookerbe.community.query.dto.CommunityThreadSummaryResponse;
 import com.cherry.cherrybookerbe.community.query.service.CommunityThreadQueryService;
 import java.util.List;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/community/threads")
@@ -21,10 +19,14 @@ public class CommunityThreadQueryController {
         this.communityThreadQueryService = communityThreadQueryService;
     }
 
-    // 커뮤니티 스레드 목록을 조회하는 메소드
+    // 커뮤니티 스레드 목록을 조회하는 메소드 (페이징)
     @GetMapping
-    public ResponseEntity<ApiResponse<List<CommunityThreadSummaryResponse>>> getThreadList() {
-        List<CommunityThreadSummaryResponse> responses = communityThreadQueryService.getThreadList();
+    public ResponseEntity<ApiResponse<CommunityThreadListResponse>> getThreadList(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        CommunityThreadListResponse responses =
+                communityThreadQueryService.getThreadList(page, size);
         return ResponseEntity.ok(ApiResponse.success(responses));
     }
 

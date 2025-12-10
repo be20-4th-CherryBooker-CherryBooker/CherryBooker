@@ -9,10 +9,8 @@ public class CommunityThreadSummaryResponse {
 
     private final Integer threadId;
     private final Integer userId;
-//    private final String nickname;
     private final Integer quoteId;
-//    private final String bookTitle;
-//    private final String quoteText;
+    private final String quoteContent;
     private final LocalDateTime createdAt;
     private final LocalDateTime updatedAt;
     private final boolean updated;
@@ -21,10 +19,8 @@ public class CommunityThreadSummaryResponse {
 
     public CommunityThreadSummaryResponse(Integer threadId,
                                           Integer userId,
-//                                          String nickname,
                                           Integer quoteId,
-//                                          String bookTitle,
-//                                          String quoteText,
+                                          String quoteContent,
                                           LocalDateTime createdAt,
                                           LocalDateTime updatedAt,
                                           boolean updated,
@@ -32,10 +28,8 @@ public class CommunityThreadSummaryResponse {
                                           int reportCount) {
         this.threadId = threadId;
         this.userId = userId;
-//        this.nickname = nickname;
         this.quoteId = quoteId;
-//        this.bookTitle = bookTitle;
-//        this.quoteText = quoteText;
+        this.quoteContent = quoteContent;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
         this.updated = updated;

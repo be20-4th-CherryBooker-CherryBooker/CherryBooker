@@ -10,6 +10,7 @@ public class CommunityReplyResponse {
     private final Integer replyId;
     private final Integer userId;
     private final Integer quoteId;
+    private final String quoteContent;
     private final LocalDateTime createdAt;
     private final LocalDateTime updatedAt;
     private final boolean updated;
@@ -19,6 +20,7 @@ public class CommunityReplyResponse {
     public CommunityReplyResponse(Integer replyId,
                                   Integer userId,
                                   Integer quoteId,
+                                  String quoteContent,
                                   LocalDateTime createdAt,
                                   LocalDateTime updatedAt,
                                   boolean updated,
@@ -27,6 +29,7 @@ public class CommunityReplyResponse {
         this.replyId = replyId;
         this.userId = userId;
         this.quoteId = quoteId;
+        this.quoteContent = quoteContent;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
         this.updated = updated;

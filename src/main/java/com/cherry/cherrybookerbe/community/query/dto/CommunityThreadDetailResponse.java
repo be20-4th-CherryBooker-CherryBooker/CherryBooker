@@ -11,6 +11,7 @@ public class CommunityThreadDetailResponse {
     private final Integer threadId;
     private final Integer userId;
     private final Integer quoteId;
+    private final String quoteContent;
     private final LocalDateTime createdAt;
     private final LocalDateTime updatedAt;
     private final boolean updated;
@@ -21,6 +22,7 @@ public class CommunityThreadDetailResponse {
     public CommunityThreadDetailResponse(Integer threadId,
                                          Integer userId,
                                          Integer quoteId,
+                                         String quoteContent,
                                          LocalDateTime createdAt,
                                          LocalDateTime updatedAt,
                                          boolean updated,
@@ -30,6 +32,7 @@ public class CommunityThreadDetailResponse {
         this.threadId = threadId;
         this.userId = userId;
         this.quoteId = quoteId;
+        this.quoteContent = quoteContent;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
         this.updated = updated;
