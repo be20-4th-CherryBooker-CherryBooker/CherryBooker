@@ -100,10 +100,37 @@ const closeModal = () => {
 };
 
 // 1) 내 서재 목록 불러오기
+// JWT에서 userId 추출
+function parseJwt(token) {
+  try {
+    const base64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+    return JSON.parse(decodeURIComponent(escape(window.atob(base64))));
+  } catch (e) {
+    return null;
+  }
+}
+
 const loadUserBooks = async () => {
   try {
-    const res = await axios.get("/api/user-books");
-    books.value = res.data;
+    const token = localStorage.getItem("accessToken");
+    const payload = parseJwt(token);
+    const userId = payload.sub;
+
+    const res = await axios.get("/mylib/books", {
+      params: { userId, page: 0, size: 50 },
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    const rawList = res.data?.data?.books || [];
+
+    // API 데이터를 프론트용 형태로 변환
+    books.value = rawList.map(item => ({
+      userBookId: item.myLibId,
+      bookTitle: item.title,
+      author: item.author,
+      coverImageUrl: item.coverImageUrl
+    }));
+
   } catch (e) {
     console.error("도서 목록 불러오기 실패", e);
   }
@@ -148,41 +175,67 @@ const requestOCR = async () => {
 
 // 4) 글귀 등록 API + 이미지 업로드 연동
 const submitQuote = async () => {
-  if (!selectedBookId.value) return alert("도서를 선택해주세요.");
-  if (!content.value.trim()) return alert("글귀 내용을 입력해주세요.");
+  if (!selectedBookId.value) {
+    alert("도서를 선택해주세요.");
+    return;
+  }
+  if (!content.value.trim()) {
+    alert("글귀 내용을 입력해주세요.");
+    return;
+  }
 
   submitLoading.value = true;
 
   try {
+    const token = localStorage.getItem("accessToken");
+    const payload = parseJwt(token);
+    const userId = payload.sub;   // ⭐ 여기 추가됨 ⭐
+
     let uploadedPath = null;
 
-    // ✔ 이미지 파일이 있으면 백엔드에 업로드
+    // 이미지 업로드
     if (imageFile.value) {
       const formData = new FormData();
       formData.append("file", imageFile.value);
 
       const uploadRes = await axios.post("/api/files/upload", formData, {
-        headers: { "Content-Type": "multipart/form-data" }
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data"
+        }
       });
 
-      uploadedPath = uploadRes.data.filePath; // → FileUploadController가 반환하는 경로
+      uploadedPath =
+          uploadRes.data?.data?.filePath ??
+          uploadRes.data?.filePath ??
+          null;
     }
 
-    // ✔ 글귀 등록 API 호출
+    // 글귀 등록 요청
+    const selectedBook = books.value.find(b => b.userBookId === selectedBookId.value);
+
     const body = {
+      userId,
       userBookId: selectedBookId.value,
       content: content.value,
-      imagePath: uploadedPath // 업로드 성공 시 실제 이미지 경로 저장
+      imagePath: uploadedPath,
+      bookTitle: selectedBook.bookTitle,
+      author: selectedBook.author
     };
 
-    await axios.post("/api/quotes", body);
+    const quoteRes = await axios.post("/api/quotes", body, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json"
+      }
+    });
 
     alert("글귀가 등록되었습니다!");
     emit("created");
-    emit("close");
+    closeModal();
 
   } catch (e) {
-    console.error(e);
+    console.error("❌ 글귀 등록 실패", e);
     alert("등록 중 오류가 발생했습니다.");
   } finally {
     submitLoading.value = false;

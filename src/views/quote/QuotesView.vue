@@ -100,10 +100,26 @@ const loadQuotes = async () => {
 
   isLoading.value = true;
 
-  const res = await fetch('/quote.json');
-  const data = await res.json();
+  const token = localStorage.getItem("accessToken");
+  if (!token) {
+    console.error("토큰 없음 → 로그인 필요");
+    return;
+  }
 
-  quotes.value.push(...data.content);  // ← quotes!
+  const res = await fetch(`/api/quotes/my?page=${page.value}&size=${size}&keyword=${keyword.value || ""}`, {
+    headers: {
+      "Authorization": `Bearer ${token}`
+    }
+
+  });
+
+  if (!res.ok) {
+    console.error("API 호출 실패 상태:", res.status);
+    return;
+  }
+
+  const data = await res.json();
+  quotes.value.push(...data.content);
   isLast.value = data.last;
 
   page.value++;
@@ -133,24 +149,44 @@ const refreshQuotes = () => {
 };
 
 // 삭제
+// 글귀 삭제
 const deleteQuote = async (quoteId) => {
   if (!confirm("정말 삭제하시겠습니까?")) return;
 
-  await fetch(`/api/quotes/${quoteId}`, { method: "DELETE" });
+  try {
+    const token = localStorage.getItem("accessToken");
 
-  showDetailModal.value = false;
-  refreshQuotes();
+    await fetch(`/api/quotes/${quoteId}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+
+    alert("삭제되었습니다!");
+
+    showDetailModal.value = false;
+    refreshQuotes();   // 목록 갱신
+
+  } catch (e) {
+    console.error("삭제 실패", e);
+    alert("삭제 중 오류 발생");
+  }
 };
 
 // 수정
 const editQuote = async (quote) => {
   const newComment = prompt("새로운 코멘트를 입력하세요", quote.comment || "");
-
   if (newComment === null) return;
+
+  const token = localStorage.getItem("accessToken");
 
   await fetch(`/api/quotes/${quote.quoteId}/comment`, {
     method: "PATCH",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`
+    },
     body: JSON.stringify({ comment: newComment }),
   });
 
