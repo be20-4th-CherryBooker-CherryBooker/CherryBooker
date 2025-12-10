@@ -10,5 +10,5 @@ import lombok.Setter;
 public class UpdateNicknameRequest {
 
     @NotBlank(message = "새로운 닉네임을 입력해주세요.")
-    String nickkname;
+    String Nickkname;
 }

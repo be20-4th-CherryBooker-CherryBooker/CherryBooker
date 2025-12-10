@@ -66,7 +66,6 @@ public class OAuth2UserService extends DefaultOAuth2UserService {
             userRepository.save(user);
             isNewUser = true;
         }
-
         return new CustomOAuth2User(user, oAuth2User.getAttributes(), isNewUser);
     }
 }
