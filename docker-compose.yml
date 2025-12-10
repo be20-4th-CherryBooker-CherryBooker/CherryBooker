@@ -4,10 +4,10 @@ services:
     container_name: cherry-booker-main-db
     restart: unless-stopped
     environment:
-      MARIADB_ROOT_PASSWORD: valen777
+      MARIADB_ROOT_PASSWORD:
       MARIADB_DATABASE: test
-      MARIADB_USER: penrose
-      MARIADB_PASSWORD: valen777
+      MARIADB_USER:
+      MARIADB_PASSWORD:
     volumes:
       - db-data:/var/lib/mariadb/data
     ports:
@@ -21,8 +21,8 @@ services:
       - db
     environment:
       SPRING_DATASOURCE_URL: jdbc:mariadb://db:3306/test
-      SPRING_DATASOURCE_USERNAME: penrose
-      SPRING_DATASOURCE_PASSWORD: valen777
+      SPRING_DATASOURCE_USERNAME:
+      SPRING_DATASOURCE_PASSWORD:
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
     ports:
       - "8080:8080"                         #host is 8080, conatiner is 8080.
