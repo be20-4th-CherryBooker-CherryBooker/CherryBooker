@@ -1,0 +1,12 @@
+[submodule "backend"]
+	path = backend
+	url = https://github.com/be20-4th-CherryBooker-CherryBooker/CherryBooker-BE.git
+[submodule "frontend"]
+	path = frontend
+	url = https://github.com/be20-4th-CherryBooker-CherryBooker/CherryBooker-FE.git
+[submodule "EasyOCR-fastapi-service"]
+	path = EasyOCR-fastapi-service
+	url = https://github.com/be20-4th-CherryBooker-CherryBooker/EasyOCR-fastapi-service.git
+[submodule "ocr"]
+	path = ocr
+	url = https://github.com/be20-4th-CherryBooker-CherryBooker/EasyOCR-fastapi-service.git
