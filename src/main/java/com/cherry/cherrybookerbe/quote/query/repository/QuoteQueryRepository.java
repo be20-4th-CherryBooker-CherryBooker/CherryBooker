@@ -27,7 +27,9 @@ public interface QuoteQueryRepository extends JpaRepository<Quote, Long> {
             Pageable pageable
     );
 
-    @Query("SELECT q FROM Quote q WHERE (:keyword IS NULL OR q.bookTitle LIKE %:keyword%)")
-    Page<Quote> findByBookTitleContaining(@Param("keyword") String keyword, Pageable pageable);
+    @Query("SELECT q FROM Quote q WHERE q.status = :status AND (:keyword IS NULL OR q.bookTitle LIKE %:keyword%)")
+    Page<Quote> searchByBookTitle(@Param("keyword") String keyword,
+                                  @Param("status") Status status,
+                                  Pageable pageable);
 
 }

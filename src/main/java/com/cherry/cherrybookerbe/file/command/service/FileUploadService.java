@@ -13,7 +13,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class FileUploadService {
 
-    // 프로젝트 내부에 저장
+    // 상대경로가 아니라 절대경로 기반으로 생성하기 위해 basePath만 유지
     private final String uploadBasePath = "uploads/quotes/";
 
     public String save(MultipartFile file) {
@@ -26,17 +26,25 @@ public class FileUploadService {
         String extension = getExtension(file.getOriginalFilename());
         String fileName = uuid + "." + extension;
 
-        // 저장 경로 생성
-        Path savePath = Paths.get(uploadBasePath, fileName);
+        // 실제 저장될 절대경로 생성 (프로젝트 루트 기반)
+        Path uploadDir = Paths.get(System.getProperty("user.dir"), uploadBasePath);
 
         try {
-            Files.createDirectories(savePath.getParent());
+            // uploads/quotes 폴더 없다면 생성
+            Files.createDirectories(uploadDir);
+
+            // 저장할 파일 경로
+            Path savePath = uploadDir.resolve(fileName);
+
+            // 파일 저장
             file.transferTo(savePath.toFile());
+
+            // DB에는 상대 경로만 저장
+            return uploadBasePath + fileName;
+
         } catch (Exception e) {
             throw new RuntimeException("파일 저장 실패", e);
         }
-
-        return savePath.toString(); // DB에 저장할 이미지 경로
     }
 
     private void validateExtension(String filename) {

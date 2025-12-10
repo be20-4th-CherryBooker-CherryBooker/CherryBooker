@@ -22,7 +22,8 @@ public class QuoteQueryService {
     // 글귀 상세 조회
     public QuoteDetailResponse getQuoteDetail(Long quoteId) {
         Quote quote = repository.findById(quoteId)
-                .orElseThrow(() -> new RuntimeException("Quote not found"));
+                .filter(q -> q.getStatus() == Status.Y)
+                .orElseThrow(() -> new RuntimeException("Quote not found or deleted"));
 
         return QuoteDetailResponse.from(quote);
     }
@@ -54,7 +55,7 @@ public class QuoteQueryService {
 
     // 책 제목으로 검색
     public Page<QuoteListResponse> searchQuotes(String keyword, Pageable pageable) {
-        Page<Quote> result = repository.findByBookTitleContaining(keyword, pageable);
+        Page<Quote> result = repository.searchByBookTitle(keyword, Status.Y, pageable);
         return result.map(QuoteListResponse::from);
     }
 
