@@ -25,8 +25,6 @@ public class MyLibController {
 
     @GetMapping("/books")
     public ResponseEntity<ApiResponse<MyLibrarySliceResponse>> getMyLibrary(
-            // ToDo: currently the below logic is receiving userId by passing
-            //@RequestParam Long userId,
             @AuthenticationPrincipal UserPrincipal userPrincipal,
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) BookStatus status,
