@@ -45,6 +45,9 @@ public class User extends BaseTimeEntity {
     @Column(name = "user_role", nullable = false, length = 20)
     private UserRole userRole;
 
+    @Column(name = "delete_count", nullable = false)
+    private Integer deleteCount;
+
     @Builder
     private User(LoginType loginType,
                  String userName,
@@ -56,6 +59,7 @@ public class User extends BaseTimeEntity {
         this.userEmail = userEmail;
         this.userPassword = userPassword;
         this.userNickname = userNickname;
+        this.deleteCount = 0;      //기본값 0
 
         // 생성 시 기본 상태
         this.userStatus = UserStatus.NORMAL;
