@@ -7,6 +7,12 @@ const routes = [
         component: () => import("../views/home/HomeView.vue")
     },
     {
+        path: "/oauth2/success",
+        name: "oauthSuccess",
+        component: () => import("../views/login/OAuthSuccessView.vue"),
+        meta: { hideNav: true }
+    },
+    {
         path: "/login",
         name: "login",
         component: () => import("../views/login/LoginView.vue"),
