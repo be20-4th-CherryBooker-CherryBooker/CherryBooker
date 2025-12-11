@@ -2,7 +2,7 @@
   <nav class="admin-nav">
 
     <div class="nav-item">
-      <img src="/images/user.svg" @click="goTo('/')" />
+      <img src="/images/user.svg"/>
     </div>
 
     <div class="nav-item"
@@ -11,7 +11,7 @@
       <img src="/images/eye-off.svg" />
     </div>
 
-    <div class="nav-logo" @click="goTo('/')">
+    <div class="nav-logo">
       CherryBooker Admin
     </div>
 
@@ -91,10 +91,11 @@ const isActive = (p) => route.path.startsWith(p);
 
 /* 중앙 로고 */
 .nav-logo {
-  font-family: "Angkor", serif;
-  font-size: 22px;
-  color: #EF3E42;
+  font-size: 20px;
+  font-weight: 700;
+  color: #EF3E42; /* 체리색 */
   cursor: pointer;
+  font-family: "Angkor", serif;
 }
 
 </style>
