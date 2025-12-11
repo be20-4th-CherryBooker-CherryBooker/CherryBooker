@@ -10,8 +10,8 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
-@Table(name = "alarm_log")
-public class AlarmLog extends BaseTimeEntity {
+@Table(name = "alarm_log") // DB 테이블은 그대로 사용
+public class Notification extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -22,21 +22,20 @@ public class AlarmLog extends BaseTimeEntity {
     private Integer userId;
 
     @Column(name = "alarm_title", nullable = false, length = 150)
-    private String alarmTitle;
+    private String title;
 
     @Column(name = "alarm_context", nullable = false, length = 255)
-    private String alarmContext;
+    private String content;
 
     @Column(name = "is_read", nullable = false)
-    private boolean read = false;
+    private boolean read;
 
     @Builder
-    private AlarmLog(Integer userId,
-                     String alarmTitle,
-                     String alarmContext) {
+    private Notification(Integer userId, String title, String content) {
         this.userId = userId;
-        this.alarmTitle = alarmTitle;
-        this.alarmContext = alarmContext;
+        this.title = title;
+        this.content = content;
+        this.read = false;
     }
 
     public void markRead() {
