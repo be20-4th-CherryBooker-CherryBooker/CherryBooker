@@ -2,7 +2,7 @@
   <div class="admin-container">
     <h2 class="title">🚨 신고 관리</h2>
 
-    <!-- 🔥 상단 통계 -->
+    <!-- 상단 통계 -->
     <div class="summary-box">
       <div class="summary-card">
         <p>전체 신고 수</p>
@@ -20,7 +20,7 @@
       </div>
     </div>
 
-    <!-- 🔥 테이블 -->
+    <!-- 테이블 -->
     <div class="table-box">
       <div class="table-header">
         <span></span>
@@ -58,7 +58,7 @@
         </tbody>
       </table>
 
-      <!-- 🔥 페이지네이션 -->
+      <!-- 페이지네이션 -->
       <div class="pagination">
         <button
             v-for="page in totalPages"
@@ -81,14 +81,14 @@ import { getReportSummary, getReportList } from "@/api/adminReportApi";
 
 const router = useRouter();
 
-// 📌 요약 데이터
+//  요약 데이터
 const summary = ref({
   totalCount: 0,
   completedCount: 0,
   pendingCount: 0,
 });
 
-// 📌 신고 목록
+//  신고 목록
 const reportList = ref([]);
 
 // 필터 → 기본값 PENDING
@@ -98,17 +98,13 @@ const filterStatus = ref("PENDING");
 const currentPage = ref(1);
 const pageSize = 7;
 
-// 🚨 데이터 로딩 (여기만 쓰면 됨!)
+// 데이터 로딩
 onMounted(async () => {
   try {
     const summaryRes = await getReportSummary();
     const listRes = await getReportList();
-
-    console.log("🔥 서버에서 받은 summary:", summaryRes);
-    console.log("🔥 서버에서 받은 목록:", listRes);
-
-    summary.value = summaryRes.data;   // ⬅ 여기 수정!
-    reportList.value = listRes.data;   // ⬅ 여기 수정!
+    summary.value = summaryRes.data;
+    reportList.value = listRes.data;
   } catch (e) {
     console.error("❌ 관리자 신고 조회 실패:", e);
   }
