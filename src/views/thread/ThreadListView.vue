@@ -37,47 +37,76 @@
     <button class="create-btn" @click="openCreateModal">
       등록하기
     </button>
+
+    <!-- 스레드 등록 모달 -->
+    <ThreadCreateModal
+        v-if="createModalOpen"
+        @close="closeCreateModal"
+        @created="onThreadCreated"
+    />
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
-import ThreadItem from "@/components/thread/ThreadItem.vue";
-import { fetchThreads } from "@/api/threadApi";
+import { ref, onMounted } from 'vue'
+import ThreadItem from '@/components/thread/ThreadItem.vue'
+import ThreadCreateModal from '@/components/thread/ThreadCreateModal.vue'
+import { fetchThreads } from '@/api/threadApi'
+import { useAuthStore } from '@/stores/authStore'
+import { useRouter } from 'vue-router'
 
-const threads = ref([]);
+const threads = ref([])
 const pagination = ref({
   currentPage: 0,
   totalPages: 0,
   totalItems: 0,
-});
+})
 
-const pageSize = 4; // 페이지당 4개
+const pageSize = 4
+const createModalOpen = ref(false)
+
+const router = useRouter()
+const authStore = useAuthStore()
 
 const loadThreads = async (page = 0) => {
   try {
-    const body = await fetchThreads({ page, size: pageSize });
-    // CommunityThreadListResponse
-    threads.value = body?.threads ?? [];
+    const body = await fetchThreads({ page, size: pageSize })
+    threads.value = body?.threads ?? []
     pagination.value =
-        body?.pagination ?? { currentPage: 0, totalPages: 0, totalItems: 0 };
+        body?.pagination ?? { currentPage: 0, totalPages: 0, totalItems: 0 }
   } catch (e) {
-    console.error("스레드 목록 조회 실패", e);
+    console.error('스레드 목록 조회 실패', e)
   }
-};
+}
 
 const changePage = (page) => {
-  if (page < 0 || page >= pagination.value.totalPages) return;
-  loadThreads(page);
-};
+  if (page < 0 || page >= pagination.value.totalPages) return
+  loadThreads(page)
+}
 
 const openCreateModal = () => {
-  // TODO: CMT-001 — 내 글귀 선택 후 POST /api/community/threads
-  //   → createThread({ quoteId }) 사용
-};
+  // 로그인 안 한 경우 로그인 페이지로 유도
+  if (!authStore.isLoggedIn) {
+    alert('로그인 후 이용 가능합니다.')
+    router.push({ name: 'login' })
+    return
+  }
+  createModalOpen.value = true
+}
 
-onMounted(() => loadThreads(0));
+const closeCreateModal = () => {
+  createModalOpen.value = false
+}
+
+// 모달에서 스레드가 성공적으로 생성된 경우
+const onThreadCreated = () => {
+  // 첫 페이지를 다시 불러오거나, 현재 페이지를 새로고침
+  loadThreads(0)
+}
+
+onMounted(() => loadThreads(0))
 </script>
+
 
 
 <style scoped>

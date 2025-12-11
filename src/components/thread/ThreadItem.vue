@@ -11,7 +11,7 @@
     <!-- 오른쪽 : 말풍선 카드 -->
     <div class="bubble">
       <div class="bubble-header">
-        <span class="user">사용자 {{ thread.userId }}</span>
+        <span class="user">{{ thread.userNickname }}</span>
         <span class="date">{{ formatDate(thread.createdAt) }}</span>
       </div>
       <div class="bubble-body">

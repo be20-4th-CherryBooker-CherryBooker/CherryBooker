@@ -21,14 +21,15 @@
             <div class="meta">
               <!-- 날짜 먼저, 그 다음 사용자 -->
               <span class="date">{{ formatDate(message.createdAt) }}</span>
-              <span class="user">사용자 {{ message.userId }}</span>
+              <span class="user">{{ message.userNickname }}</span>
               <span v-if="message.updated" class="badge">수정됨</span>
               <span v-if="message.deleted" class="badge deleted">삭제됨</span>
             </div>
 
-            <div v-if="message.isRoot" class="actions">
-              <button>삭제</button>
-              <button>수정</button>
+            <!-- 내 글이고, 아직 삭제되지 않은 경우에만 수정/삭제 노출 -->
+            <div v-if="isOwner(message) && !message.deleted" class="actions">
+              <button @click.stop="onDelete(message)">삭제</button>
+              <button @click.stop="openEditModal(message)">수정</button>
             </div>
           </div>
 
@@ -39,65 +40,150 @@
       </div>
     </div>
 
-    <!-- 아래 오른쪽에 + 버튼 -->
+    <!-- 아래 오른쪽에 + 버튼 (답변 등록) -->
     <button class="reply-create-btn" @click="openReplyModal">
       답변 남기기
     </button>
+
+    <!-- 답변 등록 모달 (CMT-007) -->
+    <ThreadCreateModal
+        v-if="replyModalOpen"
+        mode="reply"
+        :thread-id="detail.threadId"
+        @close="replyModalOpen = false"
+        @created="() => { replyModalOpen = false; loadDetail(); }"
+    />
+
+    <!-- 스레드/답변 수정 모달 (CMT-002, CMT-008) -->
+    <!-- editContext: 'root' | 'reply' -->
+    <ThreadCreateModal
+        v-if="editModalOpen"
+        :mode="editContext"
+        :thread-id="detail.threadId"
+        :is-edit="true"
+        :target-id="editTargetId"
+        @close="editModalOpen = false"
+        @created="() => { editModalOpen = false; loadDetail(); }"
+    />
+
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from "vue";
-import { useRoute } from "vue-router";
-import { fetchThreadDetail, deleteThread } from "@/api/threadApi";
+import { ref, onMounted, computed } from 'vue'
+import { useRoute } from 'vue-router'
+import { useAuthStore } from '@/stores/authStore'
+import { fetchThreadDetail, deleteThread, deleteReply } from '@/api/threadApi'
+import ThreadCreateModal from '@/components/thread/ThreadCreateModal.vue'
 
-const route = useRoute();
-const detail = ref(null);
+const route = useRoute()
+const authStore = useAuthStore()
 
+// 새로고침 이후 복구
+if (!authStore.accessToken) {
+  authStore.loadFromStorage()
+}
+
+const detail = ref(null)
+
+const replyModalOpen = ref(false)
+const editModalOpen = ref(false)
+const editContext = ref('root')     // 'root' | 'reply'
+const editTargetId = ref(null)      // 수정 대상 ID
+
+// 내 userId
+const myUserId = computed(() => {
+  const raw = authStore.user?.userId
+  return raw != null ? Number(raw) : null
+})
+
+// 상세 불러오기
 const loadDetail = async () => {
   try {
-    const id = route.params.threadId;
-    const body = await fetchThreadDetail(id);
-    detail.value = body;
+    const id = route.params.threadId
+    const body = await fetchThreadDetail(id)
+    detail.value = body
+
+    console.log(
+        '[ThreadDetail] myUserId =',
+        myUserId.value,
+        'thread.userId =',
+        body.userId
+    )
   } catch (e) {
-    console.error("스레드 상세 조회 실패", e);
+    console.error('스레드 상세 조회 실패', e)
   }
-};
+}
 
 const formatDate = (dateTime) => {
-  if (!dateTime) return "";
-  return dateTime.replace("T", " ").slice(0, 16);
-};
+  if (!dateTime) return ''
+  return dateTime.replace('T', ' ').slice(0, 16)
+}
 
-// 루트 + 릴레이를 하나의 메시지 리스트로 변환
+// 루트 + 릴레이 합치기
 const messages = computed(() => {
-  if (!detail.value) return [];
+  if (!detail.value) return []
 
   const root = {
     id: detail.value.threadId,
     userId: detail.value.userId,
+    userNickname: detail.value.userNickname,
     createdAt: detail.value.createdAt,
     updated: detail.value.updated,
     deleted: detail.value.deleted,
     quoteContent: detail.value.quoteContent,
     isRoot: true,
-  };
+  }
 
   const replies = (detail.value.replies || []).map((r) => ({
     ...r,
     isRoot: false,
-  }));
+  }))
 
-  return [root, ...replies];
-});
+  return [root, ...replies]
+})
 
+// 내가 쓴 글인지
+const isOwner = (message) => {
+  console.log(
+      '[isOwner]',
+      'myUserId =', myUserId.value,
+      'message.userId =', message.userId
+  )
+  if (myUserId.value == null) return false
+  return Number(message.userId) === myUserId.value
+}
+
+// 답변 등록 모달 열기
 const openReplyModal = () => {
-  // CMT-007: 내 글귀 중 하나 선택 → quoteId로
-  // POST /api/community/threads/{threadId}/replies
-  // → createThreadReply(detail.value.threadId, { quoteId }) 사용
-};
+  replyModalOpen.value = true
+}
 
-onMounted(loadDetail);
+// 수정 모달 열기
+const openEditModal = (message) => {
+  editContext.value = message.isRoot ? 'root' : 'reply'
+  editTargetId.value = message.isRoot ? message.id : message.replyId
+  editModalOpen.value = true
+}
+
+// 삭제
+const onDelete = async (message) => {
+  if (!confirm('정말 삭제하시겠습니까?')) return
+
+  try {
+    if (message.isRoot) {
+      await deleteThread(message.id)
+    } else {
+      await deleteReply(message.replyId)
+    }
+    await loadDetail()
+  } catch (e) {
+    console.error('삭제 실패', e)
+    alert('삭제에 실패했습니다.')
+  }
+}
+
+onMounted(loadDetail)
 </script>
 
 
@@ -239,7 +325,7 @@ onMounted(loadDetail);
   color: #666;
 }
 
-/* 루트 스레드 수정/삭제 버튼 */
+/* 루트/릴레이 수정/삭제 버튼 */
 .actions button {
   border: none;
   padding: 6px 10px;

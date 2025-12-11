@@ -67,7 +67,18 @@ export async function createThreadReply(threadId, payload) {
 }
 
 /**
- * 스레드 답변 수정/삭제도 필요하다면 여기에 추가
- * - updateThreadReply(threadId, replyId, payload)
- * - deleteThreadReply(threadId, replyId)
+ * 스레드 답변 수정/삭제
  */
+
+
+// 답변 수정
+export async function updateReply(replyId, payload) {
+    const res = await apiClient.put(`/community/threads/replies/${replyId}`, payload);
+    return res.data.data;
+}
+
+// 답변 삭제
+export async function deleteReply(replyId) {
+    await apiClient.delete(`/community/threads/replies/${replyId}`);
+}
+

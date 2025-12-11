@@ -53,6 +53,7 @@ export const useAuthStore = defineStore('auth', () => {
     const setUserFromToken = (token) => {
         try {
             const payload = jwtDecode(token)
+            console.log('[setUserFromToken] decoded payload =', payload)
 
             // sub가 userId이므로 Number로 변환
             const userIdFromToken = payload.sub ? Number(payload.sub) : null
