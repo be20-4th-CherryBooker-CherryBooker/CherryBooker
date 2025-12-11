@@ -3,6 +3,7 @@ package com.cherry.cherrybookerbe.common.security.oauth;
 import com.cherry.cherrybookerbe.common.security.auth.RefreshTokenStore;
 import com.cherry.cherrybookerbe.common.security.auth.UserPrincipal;
 import com.cherry.cherrybookerbe.common.security.jwt.JwtTokenProvider;
+import com.cherry.cherrybookerbe.user.command.domain.entity.UserStatus;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +30,15 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
 
         try {
             CustomOAuth2User oAuth2User = (CustomOAuth2User) authentication.getPrincipal();
+
+            // 정지된 계정 토큰 발급 차단
+            if (oAuth2User.user().getUserStatus() == UserStatus.SUSPENDED) {
+                log.warn("정지된 계정(email={})의 로그인이 차단되었습니다.", oAuth2User.user().getUserEmail());
+                String redirectUrl = "http://localhost:5173/oauth2/error/suspended";
+                getRedirectStrategy().sendRedirect(request, response, redirectUrl);
+                return;
+            }
+
             UserPrincipal principal = oAuth2User.toUserPrincipal();
 
             String userId = principal.userId().toString();

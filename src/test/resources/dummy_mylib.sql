@@ -3,8 +3,8 @@ DELETE FROM my_lib;
 DELETE FROM book;
 DELETE FROM users;
 
-INSERT INTO users (user_id, login_type, user_name, user_email, user_password, user_nickname, user_status, user_role, created_at)
-VALUES (1, 'GOOGLE', '테스터', 'tester@example.com', 'password', 'tester', 'NORMAL', 'USER', CURRENT_TIMESTAMP);
+INSERT INTO users (user_id, login_type, user_name, user_email, user_password, user_nickname, user_status, user_role, delete_count, created_at)
+VALUES (1, 'GOOGLE', '테스터', 'tester@example.com', 'password', 'tester', 'NORMAL', 'USER', 0, CURRENT_TIMESTAMP);
 
 INSERT INTO book (book_id, title, author, isbn, cover_image_url, created_at)
 VALUES (1, '자바의 정석', '남궁성', 'ISBN-001', 'https://covers/1', CURRENT_TIMESTAMP),
