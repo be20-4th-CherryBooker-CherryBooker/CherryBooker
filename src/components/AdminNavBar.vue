@@ -2,13 +2,13 @@
   <nav class="admin-nav">
 
     <div class="nav-item">
-      <img src="/images/user.svg"/>
+      <img src="/images/user.svg" alt="user" />
     </div>
 
     <div class="nav-item"
          :class="{ active: isActive('/admin/reports') }"
          @click="goTo('/admin/reports')">
-      <img src="/images/eye-off.svg" />
+      <img src="/images/eye-off.svg" alt="reports" />
     </div>
 
     <div class="nav-logo">
@@ -18,13 +18,13 @@
     <div class="nav-item"
          :class="{ active: isActive('/admin/notifications/send-logs') }"
          @click="goTo('/admin/notifications/send-logs')">
-      <img src="/images/bell.svg" />
+      <img src="/images/bell.svg" alt="logs"/>
     </div>
 
     <div class="nav-item"
          :class="{ active: isActive('/admin/notifications/templates') }"
          @click="goTo('/admin/notifications/templates')">
-      <img src="/images/megaphone.svg" />
+      <img src="/images/megaphone.svg" alt="templates"  />
     </div>
 
   </nav>
@@ -54,7 +54,7 @@ const isActive = (p) => route.path.startsWith(p);
 
 /* nav-item 기본 */
 .nav-item {
-  position: relative; /* underline을 위한 필수 설정 */
+  position: relative;
 }
 
 /* 아이콘 */
@@ -83,7 +83,7 @@ const isActive = (p) => route.path.startsWith(p);
   bottom: -8px;
   left: 50%;
   transform: translateX(-50%);
-  width: 40%;          /* 120%는 Grid에서 너무 튀어서 40% 추천 */
+  width: 40%;
   height: 3px;
   background: #EF3E42;
   border-radius: 2px;
