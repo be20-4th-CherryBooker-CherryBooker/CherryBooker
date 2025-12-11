@@ -14,7 +14,7 @@ public class ReportPendingResponse {
     private String targetNickname;
 
     private Long threadId;
-    //private Long threadReplyId;
+    private Long threadReplyId;
 
     private int reportCount;
     private int deleteCount;
@@ -32,7 +32,7 @@ public class ReportPendingResponse {
             Long reportedUserId,
             String targetNickname,
             Long threadId,
-           // Long threadReplyId,
+            Long threadReplyId,
             int reportCount,
             int deleteCount,
             LocalDateTime createdAt,
@@ -44,7 +44,7 @@ public class ReportPendingResponse {
         this.reportedUserId = reportedUserId;
         this.targetNickname = targetNickname;
         this.threadId = threadId;
-      //  this.threadReplyId = threadReplyId;
+        this.threadReplyId = threadReplyId;
         this.reportCount = reportCount;
         this.deleteCount = deleteCount;
         this.createdAt = createdAt;

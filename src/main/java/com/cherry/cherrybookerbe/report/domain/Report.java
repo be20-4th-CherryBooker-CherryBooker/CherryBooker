@@ -27,9 +27,9 @@ public class Report extends BaseTimeEntity {
     private CommunityThread threads;
 
     // 신고 대상 댓글 fk 추가
-   // @ManyToOne(fetch = FetchType.LAZY)
-   // @JoinColumn(name = "threads_reply_id")
-   // private CommunityReply threadsReply;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "threads_reply_id")
+    private CommunityReply threadsReply;
 
     //신고 상태
     @Enumerated(EnumType.STRING)
@@ -44,7 +44,7 @@ public class Report extends BaseTimeEntity {
     public Report(User user, CommunityThread threads, CommunityReply threadsReply, ReportStatus status, String adminComment) {
         this.user = user;
         this.threads = threads;
-        //this.threadsReply = threadsReply;
+        this.threadsReply = threadsReply;
         this.status = status;
         this.adminComment = adminComment;
     }
