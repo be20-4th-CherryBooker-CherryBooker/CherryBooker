@@ -61,7 +61,7 @@ public class ReportQueryService {
                             rs.getLong("reportedUserId"),
                             rs.getString("targetNickname"),
                             rs.getLong("threadId"),
-                          //  null,
+                            null,
                             rs.getInt("reportCount"),
                             0,
                             rs.getTimestamp("createdAt").toLocalDateTime(),
@@ -76,7 +76,7 @@ public class ReportQueryService {
         }
 
         // 2) 댓글 신고
-     /*   List<Long> pendingReplyIds = reportQueryRepository.findPendingReplyIdsReportedOverFive();
+        List<Long> pendingReplyIds = reportQueryRepository.findPendingReplyIdsReportedOverFive();
 
         for (Long replyId : pendingReplyIds) {
 
@@ -116,7 +116,7 @@ public class ReportQueryService {
 
             if (!rows.isEmpty()) result.add(rows.get(0));
         }
-*/
+
         return result;
     }
 
@@ -144,16 +144,18 @@ public class ReportQueryService {
                     u.user_id AS reportedUserId,
                     u.user_nickname AS targetNickname,
                     t.threads_id AS threadId,
-                    t.report_count AS reportCount,
+                    rep.threads_reply_id AS threadReplyId,
+                    COALESCE(t.report_count, tr.report_count) AS reportCount,
                     0 AS deleteCount,
-                    t.created_at AS createdAt,
+                    COALESCE(t.created_at, tr.created_at) AS createdAt,
                     q.content AS quoteContent,
                     rep.status AS status,
                     rep.admin_comment AS adminComment
                 FROM report rep
                 LEFT JOIN threads t ON rep.threads_id = t.threads_id
-                JOIN users u ON u.user_id = t.user_id
-                JOIN quote q ON q.quote_id = t.quote_id
+                LEFT JOIN threads_reply tr ON rep.threads_reply_id = tr.threads_reply_id
+                JOIN users u ON u.user_id = COALESCE(t.user_id, tr.user_id)
+                JOIN quote q ON q.quote_id = COALESCE(t.quote_id, tr.quote_id)
                 WHERE rep.report_id = ?
                 """,
 
@@ -162,6 +164,7 @@ public class ReportQueryService {
                         rs.getLong("reportedUserId"),
                         rs.getString("targetNickname"),
                         rs.getObject("threadId") == null ? null : rs.getLong("threadId"),
+                        rs.getObject("threadReplyId") == null ? null : rs.getLong("threadReplyId"),
                         rs.getInt("reportCount"),
                         rs.getInt("deleteCount"),
                         rs.getTimestamp("createdAt").toLocalDateTime(),

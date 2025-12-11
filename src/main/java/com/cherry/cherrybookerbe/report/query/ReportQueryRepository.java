@@ -20,14 +20,14 @@ WHERE r.status = 'PENDING'
 
 
 
-   /* @Query(value = """
+    @Query(value = """
 SELECT r.threads_reply_id
 FROM report r
 JOIN threads_reply tr ON r.threads_reply_id = tr.threads_reply_id
 WHERE r.status = 'PENDING'
   AND tr.report_count >= 5
 """, nativeQuery = true)
-    List<Long> findPendingReplyIdsReportedOverFive(); */
+    List<Long> findPendingReplyIdsReportedOverFive();
 
 
 

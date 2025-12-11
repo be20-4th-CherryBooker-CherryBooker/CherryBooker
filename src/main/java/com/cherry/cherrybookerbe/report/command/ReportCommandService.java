@@ -23,7 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class ReportCommandService {
 
     private final ReportCommandRepository reportCommandRepository;
-    //private final ReportQueryRepository reportQueryRepository;
+    private final ReportQueryRepository reportQueryRepository;
     private final JdbcTemplate jdbcTemplate;
 
     @PersistenceContext
@@ -31,11 +31,11 @@ public class ReportCommandService {
 
     public ReportCommandService(
             ReportCommandRepository reportCommandRepository,
-          //  ReportQueryRepository reportQueryRepository,
+            ReportQueryRepository reportQueryRepository,
             JdbcTemplate jdbcTemplate)
     {
         this.reportCommandRepository = reportCommandRepository;
-      //  this.reportQueryRepository = reportQueryRepository;
+        this.reportQueryRepository = reportQueryRepository;
         this.jdbcTemplate = jdbcTemplate;
     }
 
@@ -60,7 +60,7 @@ public class ReportCommandService {
         return em.getReference(CommunityThread.class, threadId);
     }
     // 댓글 조회
-    /*private CommunityReply findCommunityReplyById(Long replyId) {
+    private CommunityReply findCommunityReplyById(Long replyId) {
         String sql = "select threads_reply_id from threads_reply where threads_reply_id = ? AND is_deleted = false";
         Integer count =  jdbcTemplate.queryForObject(sql, Integer.class, replyId);
 
@@ -68,22 +68,22 @@ public class ReportCommandService {
             throw new IllegalArgumentException("Community reply not found");
         }
         return em.getReference(CommunityReply.class, replyId);
-    }*/
+    }
 
 
     // 신고 등록
     public void create(CreateReportRequest createRequest) {
         Long reporterId =  createRequest.getReporterId();
         Long threadId =  createRequest.getThreadId();
-        //Long threadReplyId = createRequest.getThreadsReplyId();
+        Long threadReplyId = createRequest.getThreadsReplyId();
 
         //신고 검증
-        if (threadId == null ) {
+        if (threadId == null && threadReplyId == null) {
             throw new IllegalArgumentException("신고 대상이 존재하지 않습니다.");
         }
 
         // 동시 신고 차단
-        if (threadId != null ) {
+        if (threadId != null && threadReplyId != null) {
             throw new IllegalArgumentException("게시글과 댓글은 동시에 신고할 수 없습니다.");
         }
 
@@ -95,15 +95,15 @@ public class ReportCommandService {
         if(threadId !=null) {
             reportedThread = findCommunityThreadById(threadId);
         }
-        /*if(threadReplyId != null) {
+        if(threadReplyId != null) {
             reportedReply = findCommunityReplyById(threadReplyId);
-        }*/
+        }
 
         // 게시글 or 댓글 신고 등록
         Report report = Report.builder()
                     .user(reporter) //신고자
                     .threads(reportedThread) //신고 대상 게시글인 경우
-                    //.threadsReply(reportedReply) // 댓글 신고인 경우
+                    .threadsReply(reportedReply) // 댓글 신고인 경우
                     .status(ReportStatus.PENDING) // 게시글
                     .build();
         reportCommandRepository.save(report); // 저장
@@ -155,7 +155,7 @@ public class ReportCommandService {
         }
 
         // 댓글 삭제
-        /*if(report.getThreadsReply() != null) {
+        if(report.getThreadsReply() != null) {
             Integer replyId = report.getThreadsReply().getId();
             Integer reportedUserId = report.getThreadsReply().getUserId();
 
@@ -174,7 +174,7 @@ public class ReportCommandService {
                     "UPDATE users SET user_status = 'SUSPENDED' WHERE user_id = ? AND delete_count >= 3",
                     reportedUserId
             );
-        }*/
+        }
 
     }
 }
