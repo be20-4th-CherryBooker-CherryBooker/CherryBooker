@@ -26,4 +26,10 @@ public class CustomUserDetailsService implements UserDetailsService {
                 .userId(user.getUserId())
                 .build();
     }
+    public UserDetails loadUserById(Integer userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + userId));
+
+        return UserPrincipal.from(user);
+    }
 }

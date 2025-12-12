@@ -7,7 +7,7 @@ import lombok.Getter;
 import java.time.LocalDateTime;
 
 @Getter
-public class MypageResponse {
+public class MyProfileResponse {
 
     private String email;
     private String name;
@@ -15,7 +15,7 @@ public class MypageResponse {
     private LocalDateTime createdAt;
 
     @Builder
-    private MypageResponse(String email, String name,  String nickname,LocalDateTime createdAt) {
+    private MyProfileResponse(String email, String name, String nickname, LocalDateTime createdAt) {
         this.email = email;
         this.name = name;
         this.nickname = nickname;
@@ -23,8 +23,8 @@ public class MypageResponse {
 
     }
 
-    public static MypageResponse from(User user) {
-        return MypageResponse.builder()
+    public static MyProfileResponse from(User user) {
+        return MyProfileResponse.builder()
                 .email(user.getUserEmail())
                 .name(user.getUserName())
                 .nickname(user.getUserNickname())

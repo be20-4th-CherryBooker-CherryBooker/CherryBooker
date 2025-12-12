@@ -32,4 +32,8 @@ public interface QuoteQueryRepository extends JpaRepository<Quote, Long> {
                                   @Param("status") Status status,
                                   Pageable pageable);
 
+    /* 마이페이지 조회 시 사용 */
+    @Query("SELECT COUNT(q) FROM Quote q " +
+            "WHERE q.userId = :userId AND q.status = com.cherry.cherrybookerbe.common.enums.Status.Y")
+    long countByUserId(@Param("userId") Long userId);
 }

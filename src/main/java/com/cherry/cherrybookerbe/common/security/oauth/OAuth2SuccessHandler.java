@@ -43,6 +43,10 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
 
             String userId = principal.userId().toString();
 
+            String email = principal.email() != null ? principal.email() : "";
+            String name = principal.name() != null ? principal.name() : "Unknown";
+            String role = principal.role() != null ? principal.role().toString() : "ROLE_USER"; // Role이 Enum일 경우 toString()
+
             // Access Token 생성
             String accessToken = jwtTokenProvider.createAccessToken(
                     userId,
@@ -55,6 +59,8 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
 
             // Refresh Token 생성
             String refreshToken = jwtTokenProvider.createRefreshToken(userId);
+
+
 
             // Redis 저장
             tokenStore.save(
