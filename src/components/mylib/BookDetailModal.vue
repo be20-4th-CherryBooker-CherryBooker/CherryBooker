@@ -63,7 +63,7 @@
 
 <script setup>
 import { computed, ref, watch } from "vue";
-import axios from "axios";
+import api from "@/axios";
 
 const props = defineProps({
   show: Boolean,
@@ -71,9 +71,8 @@ const props = defineProps({
 });
 const emit = defineEmits(["close", "open-quote-modal"]);
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "/api";
-const normalizedApiBase = API_BASE_URL.replace(/\/+$/, "");
-const myLibApiUrl = (path = "") => `${normalizedApiBase}/mylib${path}`;
+const MYLIB_BASE_URL = "/api/mylib";
+const myLibApiUrl = (path = "") => `${MYLIB_BASE_URL}${path}`;
 const fallbackCover = "/images/default-book.png";
 
 const bookDetail = ref(null);
@@ -97,7 +96,7 @@ watch(
     async (visible) => {
       if (!visible || !props.book) return;
       try {
-        const { data } = await axios.get(myLibApiUrl(`/books/${props.book.myLibId}/quotes`), {
+        const { data } = await api.get(myLibApiUrl(`/books/${props.book.myLibId}/quotes`), {
           withCredentials: true,
         });
         bookDetail.value = data?.data ?? data;
