@@ -8,6 +8,7 @@ import com.cherry.cherrybookerbe.notification.command.domain.enums.NotificationT
 import com.cherry.cherrybookerbe.notification.command.domain.repository.NotificationRepository;
 import com.cherry.cherrybookerbe.notification.command.domain.repository.NotificationSendLogRepository;
 import com.cherry.cherrybookerbe.notification.command.domain.repository.NotificationTemplateRepository;
+import com.cherry.cherrybookerbe.notification.command.dto.request.NotificationBroadcastRequest;
 import com.cherry.cherrybookerbe.notification.command.dto.request.NotificationSendRequest;
 import com.cherry.cherrybookerbe.notification.command.dto.request.NotificationTemplateCreateRequest;
 import com.cherry.cherrybookerbe.notification.command.dto.request.NotificationTemplateUpdateRequest;
@@ -15,6 +16,7 @@ import com.cherry.cherrybookerbe.notification.command.dto.response.NotificationD
 import com.cherry.cherrybookerbe.notification.command.dto.response.NotificationTemplateResponse;
 import com.cherry.cherrybookerbe.notification.command.event.NotificationCreatedEvent;
 import com.cherry.cherrybookerbe.notification.command.event.NotificationReadEvent;
+import com.cherry.cherrybookerbe.user.command.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
@@ -38,6 +40,7 @@ public class NotificationCommandService {
     private final NotificationTemplateRepository templateRepository;
     private final NotificationSendLogRepository sendLogRepository;
     private final ApplicationEventPublisher eventPublisher;
+    private final UserRepository userRepository;
 
     // ============ 템플릿 CUD ============
 
@@ -132,6 +135,66 @@ public class NotificationCommandService {
                 .notificationId(saved.getId())
                 .build();
     }
+
+    public void sendToAllByTemplate(Integer templateId, NotificationBroadcastRequest request) {
+        NotificationTemplate template = templateRepository.findById(templateId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "템플릿을 찾을 수 없습니다."));
+
+        if (template.isDeleted()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "삭제된 템플릿입니다.");
+        }
+        if (template.getType() != NotificationTemplateType.SYSTEM) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "SYSTEM 템플릿만 전체 발송할 수 있습니다.");
+        }
+
+        Map<String, String> vars = (request == null) ? null : request.getVariables();
+
+        String mergedTitle = mergeVariables(template.getTitle(), vars);
+        String mergedBody  = mergeVariables(template.getBody(), vars);
+
+        List<Integer> userIds = userRepository.findAllUserIds();
+
+        List<Notification> notifications = userIds.stream()
+                .map(uid -> Notification.builder()
+                        .userId(uid)
+                        .title(mergedTitle)
+                        .content(mergedBody)
+                        .build())
+                .toList();
+
+        // ID/createdAt 확보하려면 반환값을 받는 게 좋습니다.
+        List<Notification> savedList = notificationRepository.saveAll(notifications);
+
+        NotificationSendLog logEntity = NotificationSendLog.builder()
+                .template(template)
+                .status(NotificationSendStatus.SUCCESS)
+                .bodySnapshot(mergedBody)
+                .sentAt(LocalDateTime.now())
+                .build();
+        sendLogRepository.save(logEntity);
+
+        // 커밋 후 SSE 이벤트
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                for (Notification saved : savedList) {
+                    Integer uid = saved.getUserId();
+
+                    long unread = notificationRepository.countByUserIdAndReadFalse(uid);
+
+                    eventPublisher.publishEvent(NotificationCreatedEvent.of(
+                            uid,
+                            saved.getId(),
+                            saved.getTitle(),
+                            saved.getContent(),
+                            saved.getCreatedAt(),
+                            unread
+                    ));
+                }
+            }
+        });
+    }
+
 
     // ============ 읽음 / 삭제 ============
 

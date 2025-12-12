@@ -1,6 +1,7 @@
 package com.cherry.cherrybookerbe.notification.query.controller;
 
 import com.cherry.cherrybookerbe.common.dto.ApiResponse;
+import com.cherry.cherrybookerbe.common.security.auth.UserPrincipal;
 import com.cherry.cherrybookerbe.notification.query.dto.response.NotificationPageResponse;
 import com.cherry.cherrybookerbe.notification.query.dto.response.NotificationSendLogPageResponse;
 import com.cherry.cherrybookerbe.notification.query.dto.response.NotificationTemplatePageResponse;
@@ -32,25 +33,26 @@ public class NotificationQueryController {
     public ResponseEntity<ApiResponse<NotificationPageResponse>> getMyNotifications(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(required = false) Integer size,
-            @AuthenticationPrincipal(expression = "userId") Integer userId
+            @AuthenticationPrincipal UserPrincipal principal
     ) {
-        if (userId == null) {
+        if (principal == null || principal.userId() == null) {
             throw new AccessDeniedException("인증 정보가 없습니다.");
         }
 
+        Integer userId = principal.userId();
         var res = queryService.getMyNotifications(userId, page, size);
         return ResponseEntity.ok(ApiResponse.success(res));
     }
 
     @GetMapping("/api/notifications/me/unread-count")
     public ResponseEntity<ApiResponse<Long>> getMyUnreadCount(
-            @AuthenticationPrincipal(expression = "userId") Integer userId
+            @AuthenticationPrincipal UserPrincipal principal
     ) {
-        if (userId == null) {
+        if (principal == null || principal.userId() == null) {
             throw new AccessDeniedException("인증 정보가 없습니다.");
         }
 
-        long count = queryService.getMyUnreadCount(userId);
+        long count = queryService.getMyUnreadCount(principal.userId());
         return ResponseEntity.ok(ApiResponse.success(count));
     }
 
@@ -75,12 +77,14 @@ public class NotificationQueryController {
             produces = MediaType.TEXT_EVENT_STREAM_VALUE
     )
     public SseEmitter stream(
-            @AuthenticationPrincipal(expression = "userId") Integer userId
+            @AuthenticationPrincipal UserPrincipal principal
     ) {
-        if (userId == null) {
+        if (principal == null || principal.userId() == null) {
             throw new AccessDeniedException("인증 정보가 없습니다.");
         }
-        return emitters.add(userId.longValue()); // emitters가 Long 기반이라면 Long으로 캐스팅
+
+        // emitters가 Long 기반
+        return emitters.add(principal.userId().longValue());
     }
 
     // ===== 관리자 템플릿 목록/검색 =====
