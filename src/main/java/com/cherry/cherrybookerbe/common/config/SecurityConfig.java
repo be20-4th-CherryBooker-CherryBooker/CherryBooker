@@ -55,14 +55,24 @@ public class SecurityConfig {
                 // 인가 설정
                 // ========================================================
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/login/**", "/oauth2/**", "/login/oauth2/**").permitAll()
-                        .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers(
+                                "/", "/error", "/favicon.ico",
+                                "/login/**",
+                                "/oauth2/**",
+                                "/oauth2/authorization/**",
+                                "/login/oauth2/**",
+                                "/login/oauth2/code/**",
+                                "/auth/**",
+                                "/auth/login/kakao/**"
+                        ).permitAll()
                         // 2) 관리자 전용 API
                         .requestMatchers("/admin/**").hasRole("ADMIN")
-                        .anyRequest().permitAll()
+                        .anyRequest().authenticated()
                 )
 
-                // ========================================================
+
+                        // ========================================================
                 // OAuth2 설정
                 // ========================================================
                 .oauth2Login(oauth2 -> oauth2
