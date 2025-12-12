@@ -2,28 +2,33 @@
   <div class="home-container">
 
     <!-- 검색창 -->
-    <div class="search-box">
+    <div class="search-box" @click="openSearchModal">
       <input
           type="text"
           placeholder="읽고 싶은 책을 검색해보세요 !"
           class="search-input"
+          readonly
       />
       <span class="search-emoji">🔍</span>
     </div>
 
+    <!-- 검색 모달 -->
+    <SearchBookModal
+        :show="showSearchModal"
+        @close="showSearchModal = false"
+        @selected="goToRegisterPage"
+    />
+
     <!-- 선반 + 체리 영역 -->
     <div class="illustration-wrapper">
 
-      <!-- 선반 -->
       <div class="shelf-area">
         <img src="/images/shelf.png" class="shelf-img" />
-
         <img src="/images/default-book.png" class="book-img" />
 
-        <!-- 체리 캐릭터 (선반 위) -->
+        <!-- 체리 캐릭터 -->
         <img src="/images/character1.png" class="cherry-img" />
 
-        <!-- 말풍선 -->
         <div class="bubble">
           책 완주를 위하여~
         </div>
@@ -35,6 +40,23 @@
 </template>
 
 <script setup>
+import { ref } from "vue";
+import SearchBookModal from "@/components/book/SearchBookModal.vue";
+
+// 모달 상태
+const showSearchModal = ref(false);
+
+// 검색창 클릭 → 모달 열기
+const openSearchModal = () => {
+  showSearchModal.value = true;
+};
+
+// 모달에서 책 선택됨 → 책 등록 페이지로 이동시키거나 원하는 처리 가능
+const goToRegisterPage = (book) => {
+  console.log("선택된 책:", book);
+
+  showSearchModal.value = false;
+};
 </script>
 
 <style scoped>
