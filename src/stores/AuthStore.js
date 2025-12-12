@@ -6,8 +6,8 @@ import {
     adminLoginApi,
     refreshTokenApi,
     logoutApi,
-    getUserMeApi
 } from '@/api/AuthApi';
+import {getMyProfileApi} from '@/api/UserApi'
 
 export const useAuthStore = defineStore('auth', () => {
     // ==================
@@ -90,7 +90,7 @@ export const useAuthStore = defineStore('auth', () => {
 
     const fetchUserMe = async () => {
         try {
-            const response = await getUserMeApi();
+            const response = await getMyProfileApi();
             const data = response.data;
 
             user.value = {

@@ -99,40 +99,55 @@ const closeModal = () => {
   emit("close");
 };
 
-// 1) 내 서재 목록 불러오기
 // JWT에서 userId 추출
 function parseJwt(token) {
   try {
-    const base64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+    const base64 = token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
     return JSON.parse(decodeURIComponent(escape(window.atob(base64))));
   } catch (e) {
+    console.error("JWT 파싱 실패", e);
     return null;
   }
 }
 
+function getUserIdFromToken() {
+  const token = localStorage.getItem("accessToken");
+  if (!token) return null;
+  const payload = parseJwt(token);
+  return payload?.sub ?? null; // sub 에 userId 들어있다고 가정
+}
+
+// 1) 내 서재 목록 불러오기
 const loadUserBooks = async () => {
   try {
     const token = localStorage.getItem("accessToken");
-    const payload = parseJwt(token);
-    const userId = payload.sub;
+    const userId = getUserIdFromToken();
 
-    const res = await axios.get("/mylib/books", {
-      params: { userId, page: 0, size: 50 },
+    if (!token || !userId) {
+      console.error("토큰 또는 userId 없음");
+      return;
+    }
+
+    const res = await axios.get("/api/mylib/books", {
+      params: {
+        userId,
+        page: 0,
+        size: 50
+      },
       headers: { Authorization: `Bearer ${token}` }
     });
 
     const rawList = res.data?.data?.books || [];
 
-    // API 데이터를 프론트용 형태로 변환
-    books.value = rawList.map(item => ({
+    books.value = rawList.map((item) => ({
       userBookId: item.myLibId,
       bookTitle: item.title,
       author: item.author,
       coverImageUrl: item.coverImageUrl
     }));
-
   } catch (e) {
     console.error("도서 목록 불러오기 실패", e);
+    alert("도서 목록을 불러오는 중 오류가 발생했습니다.");
   }
 };
 
@@ -188,12 +203,16 @@ const submitQuote = async () => {
 
   try {
     const token = localStorage.getItem("accessToken");
-    const payload = parseJwt(token);
-    const userId = payload.sub;   // ⭐ 여기 추가됨 ⭐
+    const userId = getUserIdFromToken();
+
+    if (!token || !userId) {
+      alert("로그인 정보가 없습니다. 다시 로그인해주세요.");
+      return;
+    }
 
     let uploadedPath = null;
 
-    // 이미지 업로드
+    // ✅ 4-1) 이미지가 있다면 업로드 먼저
     if (imageFile.value) {
       const formData = new FormData();
       formData.append("file", imageFile.value);
@@ -211,9 +230,16 @@ const submitQuote = async () => {
           null;
     }
 
-    // 글귀 등록 요청
-    const selectedBook = books.value.find(b => b.userBookId === selectedBookId.value);
+    const selectedBook = books.value.find(
+        (b) => b.userBookId === selectedBookId.value
+    );
 
+    if (!selectedBook) {
+      alert("선택한 도서를 찾을 수 없습니다.");
+      return;
+    }
+
+    // ✅ 4-2) 백엔드 기준: userId를 body에 포함
     const body = {
       userId,
       userBookId: selectedBookId.value,
@@ -223,7 +249,7 @@ const submitQuote = async () => {
       author: selectedBook.author
     };
 
-    const quoteRes = await axios.post("/api/quotes", body, {
+    await axios.post("/api/quotes", body, {
       headers: {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json"
@@ -233,7 +259,6 @@ const submitQuote = async () => {
     alert("글귀가 등록되었습니다!");
     emit("created");
     closeModal();
-
   } catch (e) {
     console.error("❌ 글귀 등록 실패", e);
     alert("등록 중 오류가 발생했습니다.");
@@ -249,7 +274,6 @@ const resetForm = () => {
   previewImage.value = "";
   content.value = "";
 };
-
 
 onMounted(() => {
   loadUserBooks();

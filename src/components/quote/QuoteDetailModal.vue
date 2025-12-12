@@ -14,7 +14,7 @@
 
       <!-- 책 정보 -->
       <div class="book-section">
-        <img :src="quote.imagePath || defaultImg" class="book-image" />
+        <img :src="quote.coverImageUrl || quote.imagePath || defaultImg" class="book-image"/>
 
         <div class="book-info">
           <div class="book-title">{{ quote.bookTitle }}</div>

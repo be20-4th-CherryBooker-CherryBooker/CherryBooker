@@ -28,7 +28,7 @@
           class="input-field"
       />
 
-      <button class="login-btn" @click="login">로그인</button>
+      <button class="login-btn" type="button" @click="login">로그인</button>
 
       <router-link to="/login" class="back-user">
         ← 사용자 로그인 페이지로 돌아가기
@@ -40,6 +40,7 @@
 
 <script setup>
 import { ref } from "vue";
+import router from "@/router/index.js";
 
 const username = ref("");
 const password = ref("");
@@ -51,6 +52,11 @@ const login = () => {
   }
 
   alert("관리자 로그인 진행! (백엔드 연결 예정)");
+
+  console.log("login start");
+  router.push("/admin/reports");
+  console.log("after push");
+
 };
 </script>
 
