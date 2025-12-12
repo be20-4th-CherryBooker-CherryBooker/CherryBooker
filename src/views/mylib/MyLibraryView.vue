@@ -82,7 +82,7 @@
 
 <script setup>
 import { ref, onMounted, onBeforeUnmount, computed } from "vue";
-import axios from "axios";
+import api from "@/axios";
 import BookCard from "@/components/mylib/BookCard.vue";
 import AddBookCard from "@/components/mylib/AddBookCard.vue";
 import AddBookModal from "@/components/mylib/AddBookModal.vue";
@@ -90,9 +90,8 @@ import BookDetailModal from "@/components/mylib/BookDetailModal.vue";
 import ScrollArrow from "@/components/mylib/ScrollArrow.vue";
 
 const PAGE_SIZE = 8;
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "/api";
-const normalizedApiBase = API_BASE_URL.replace(/\/+$/, "");
-const myLibApiUrl = (path = "") => `${normalizedApiBase}/mylib${path}`;
+const MYLIB_BASE_URL = "/api/mylib";
+const myLibApiUrl = (path = "") => `${MYLIB_BASE_URL}${path}`;
 const FALLBACK_USER_ID = import.meta.env.VITE_MYLIB_USER_ID ?? null;
 
 if (!FALLBACK_USER_ID) {
@@ -150,7 +149,7 @@ const loadBooks = async ({ reset = false } = {}) => {
 
   try {
 
-    const response = await axios.get(myLibApiUrl("/books"), {
+    const response = await api.get(myLibApiUrl("/books"), {
       params: {
         userId: FALLBACK_USER_ID || undefined,
         keyword: keyword.value || undefined,
@@ -216,7 +215,7 @@ const markAsRead = async (book) => {
   completingBookId.value = book.myLibId;
 
   try {
-    await axios.patch(
+    await api.patch(
       myLibApiUrl(`/books/${book.myLibId}/status`),
       { targetStatus: "READ" },
       { withCredentials: true }

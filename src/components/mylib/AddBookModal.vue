@@ -56,7 +56,7 @@
 
 <script setup>
 import { ref } from "vue";
-import axios from "axios";
+import api from "@/axios";
 
 const props = defineProps({
   show: Boolean,
@@ -70,9 +70,8 @@ const isLoading = ref(false);
 const isRegistering = ref(false);
 const errorMessage = ref("");
 const fallbackCover = "/images/default-book.png";
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "/api";
-const normalizedApiBase = API_BASE_URL.replace(/\/+$/, "");
-const myLibApiUrl = (path = "") => `${normalizedApiBase}/mylib${path}`;
+const MYLIB_BASE_URL = "/api/mylib";
+const myLibApiUrl = (path = "") => `${MYLIB_BASE_URL}${path}`;
 const FALLBACK_USER_ID = import.meta.env.VITE_MYLIB_USER_ID ?? null;
 
 if (!FALLBACK_USER_ID) {
@@ -94,7 +93,7 @@ const search = async () => {
   errorMessage.value = "";
   try {
     console.info("[MyLib] Searching external books:", keyword.value);
-    const { data } = await axios.get(myLibApiUrl("/library-books"), {
+    const { data } = await api.get(myLibApiUrl("/library-books"), {
       params: {
         keyword: keyword.value,
         size: 10,
@@ -118,7 +117,7 @@ const registerBook = async (book) => {
   if (isRegistering.value) return;
   isRegistering.value = true;
   try {
-    await axios.post(
+    await api.post(
       myLibApiUrl("/register-books"),
       {
         keyword: book.title,
