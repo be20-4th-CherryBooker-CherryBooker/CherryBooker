@@ -3,6 +3,7 @@ package com.cherry.cherrybookerbe.report.controller;
 import com.cherry.cherrybookerbe.common.dto.ApiResponse;
 import com.cherry.cherrybookerbe.report.command.ReportCommandService;
 import com.cherry.cherrybookerbe.report.command.dto.ProcessReportRequest;
+import com.cherry.cherrybookerbe.report.domain.ReportStatus;
 import com.cherry.cherrybookerbe.report.query.ReportQueryService;
 import com.cherry.cherrybookerbe.report.query.dto.ReportPendingResponse;
 import com.cherry.cherrybookerbe.report.query.dto.ReportSummaryResponse;
@@ -28,12 +29,14 @@ public class ReportController {
         );
     }
 
-    // 신고 목록 조회 (5회 이상 + PENDING)
+    // 신고 목록 조회 (5회 이상 신고 받은 게시물
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
-    public ApiResponse<List<ReportPendingResponse>> getPendingReportsForAdmin() {
+    public ApiResponse<List<ReportPendingResponse>> getReportsForAdmin(
+            @RequestParam(defaultValue = "PENDING") ReportStatus status
+    ) {
         return ApiResponse.success(
-                reportQueryService.getPendingReportsForAdmin()
+                reportQueryService.getReportsForAdmin(status)
         );
     }
 

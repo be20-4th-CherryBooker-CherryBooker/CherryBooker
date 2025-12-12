@@ -1,5 +1,6 @@
 package com.cherry.cherrybookerbe.report.query;
 
+import com.cherry.cherrybookerbe.report.domain.Report;
 import com.cherry.cherrybookerbe.report.domain.ReportStatus;
 import com.cherry.cherrybookerbe.report.query.dto.ReportPendingResponse;
 import com.cherry.cherrybookerbe.report.query.dto.ReportSummaryResponse;
@@ -25,12 +26,12 @@ public class ReportQueryService {
 
 
     //  관리자 신고 목록 조회
-    public List<ReportPendingResponse> getPendingReportsForAdmin() {
+    public List<ReportPendingResponse> getReportsForAdmin(ReportStatus status) {
 
         List<ReportPendingResponse> result = new ArrayList<>();
 
-        // 1) 게시글 신고
-        List<Long> pendingThreadIds = reportQueryRepository.findPendingThreadIdsReportedOverFive();
+        // 1) 게시글 신고 5회 이상인 게시글 목록
+        List<Long> pendingThreadIds = reportQueryRepository.findThreadIdsByStatusReportedOverFive(status.name());
 
         for (Long threadId : pendingThreadIds) {
 
@@ -42,13 +43,16 @@ public class ReportQueryService {
                        u.user_nickname AS targetNickname,
                        t.threads_id AS threadId,
                        t.report_count AS reportCount,
+                       0 AS deleteCount,
                        t.created_at AS createdAt,
-                       q.content AS quoteContent
+                       q.content AS quoteContent,
+                       rep.status AS status,
+                       rep.admin_comment AS adminComment
                     FROM report rep
                     JOIN threads t ON rep.threads_id = t.threads_id
                     JOIN users u ON t.user_id = u.user_id
                     JOIN quote q ON t.quote_id = q.quote_id
-                    WHERE rep.status = 'PENDING'
+                    WHERE rep.status = ?
                       AND rep.threads_id = ?
                     ORDER BY rep.created_at DESC
                     LIMIT 1
@@ -60,18 +64,18 @@ public class ReportQueryService {
                             rs.getString("targetNickname"),
                             rs.getLong("threadId"),
                             rs.getInt("reportCount"),
-                            0,
+                            rs.getInt("deleteCount"),
                             rs.getTimestamp("createdAt").toLocalDateTime(),
                             rs.getString("quoteContent"),
-                            ReportStatus.PENDING,
-                            null
+                            ReportStatus.valueOf(rs.getString("status")),
+                            rs.getString("adminComment")
                     ),
+                    status.name(),
                     threadId
             );
 
-            if (!rows.isEmpty()) result.add(rows.get(0));
+            if (!rows.isEmpty()) {result.add(rows.get(0));}
         }
-
 
         return result;
     }

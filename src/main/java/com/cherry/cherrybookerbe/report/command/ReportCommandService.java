@@ -88,58 +88,79 @@ public class ReportCommandService {
                     .build();
         reportCommandRepository.save(report); // 저장
 
-        // 신고 될 경우 게시물 report_count +1
+        //신고 접수 시 누적 신고 횟수(reported_count) 증가
         jdbcTemplate.update(
-                "UPDATE threads SET report_count = report_count + 1 WHERE threads_id = ?",
-                threadId
+                    "UPDATE threads SET report_count = report_count + 1 WHERE threads_id = ?",
+                    threadId
         );
 
 
     }
-    // 관리자 판단
+    // 관리자 판단; valid -> 삭제, 제제, rejected -> report_count +1이다.
     public void process(ProcessReportRequest processRequest)  {
         Long reportId = processRequest.getReportId(); // 관리자가 클릭한 신고 1건
         ReportStatus status = processRequest.getStatus(); // valid or rejected
         String adminComment = processRequest.getAdminComment();
 
+        // 신고 조회
         Report report = reportCommandRepository.findById(reportId)
                 .orElseThrow(() -> new IllegalArgumentException("신고가 존재하지 않습니다."));
+
+        // 이미 처리된 신고 방지
+        if (report.getStatus() != ReportStatus.PENDING) {
+            throw new IllegalStateException("이미 처리된 신고입니다.");
+        }
+
+        CommunityThread reportedThread = report.getThreads();
+        if (reportedThread == null) {
+            throw new IllegalStateException("신고 대상 게시글이 없습니다.");
+        }
+        Integer threadId = reportedThread.getId();
+
+        jdbcTemplate.update(
+                """
+                UPDATE report
+                SET status = ?,
+                    admin_comment = ?
+                WHERE threads_id = ?
+                  AND status = 'PENDING'
+                """,
+                status.name(),
+                adminComment,
+                threadId
+        );
 
         //신고 받은 게시글 상태 변경(삭제 or 반려)
 
         if(status == ReportStatus.VALID) {
-            report.approve(adminComment); // 삭제
-        } else if(status == ReportStatus.REJECTED) {
-            report.reject(adminComment); // 반려
-        }else {
-            throw new IllegalArgumentException("잘못된 상태 입니다.");
+            Integer reportedUserId = reportedThread.getUserId();
+
+
+                // 삭제
+            jdbcTemplate.update(
+                        "UPDATE threads SET is_deleted = 1 WHERE threads_id=?",
+                        threadId
+            );
+                // 삭제 delete_count 증가
+            jdbcTemplate.update(
+                        "UPDATE users SET delete_count = delete_count + 1 WHERE user_id = ?",
+                        reportedUserId
+            );
+                // delete_count가 3 이상이면 정지 처리
+            jdbcTemplate.update(
+                        "UPDATE users SET user_status = 'SUSPENDED' WHERE user_id = ? AND delete_count >= 3",
+                        reportedUserId
+            );
+
+            return;
+
         }
 
-        // 한번더 막는 장치 (아래의 로직 실행 전에)
-        if(status != ReportStatus.VALID) return;
-
-        // 게시글 삭제
-        if(report.getThreads() != null) {
-            Integer threadId = report.getThreads().getId();
-            Integer reportedUserId = report.getThreads().getUserId();
-
-            jdbcTemplate.update(
-                    "UPDATE threads SET is_deleted = 1 WHERE threads_id=?",
-                    threadId
-            );
-            // 2) delete_count 증가
-            jdbcTemplate.update(
-                    "UPDATE users SET delete_count = delete_count + 1 WHERE user_id = ?",
-                    reportedUserId
-            );
-
-            // 3) delete_count가 3 이상이면 정지 처리
-            jdbcTemplate.update(
-                    "UPDATE users SET user_status = 'SUSPENDED' WHERE user_id = ? AND delete_count >= 3",
-                    reportedUserId
-            );
-
+        // 반려 처리
+        if(status == ReportStatus.REJECTED){
+            return;
         }
+        throw new IllegalArgumentException("잘못된 상태입니다.");
 
     }
 }
