@@ -55,6 +55,8 @@ public class SecurityConfig {
                 // 인가 설정
                 // ========================================================
                 .authorizeHttpRequests(auth -> auth
+                        // Kubernetes health check를 위한 설정
+                        .requestMatchers("/actuator/health/**").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers(
                                 "/", "/error", "/favicon.ico",
