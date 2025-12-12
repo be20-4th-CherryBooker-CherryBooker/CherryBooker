@@ -5,6 +5,8 @@ import com.cherry.cherrybookerbe.notification.command.domain.enums.NotificationT
 import lombok.Builder;
 import lombok.Getter;
 
+import java.time.LocalDateTime;
+
 @Getter
 @Builder
 public class NotificationTemplateResponse {
@@ -13,6 +15,7 @@ public class NotificationTemplateResponse {
     private final NotificationTemplateType templateType;
     private final String title;
     private final String body;
+    private final LocalDateTime createdAt;
 
     public static NotificationTemplateResponse from(NotificationTemplate template) {
         return NotificationTemplateResponse.builder()
@@ -20,6 +23,7 @@ public class NotificationTemplateResponse {
                 .templateType(template.getType())
                 .title(template.getTitle())
                 .body(template.getBody())
+                .createdAt(template.getCreatedAt())
                 .build();
     }
 }
