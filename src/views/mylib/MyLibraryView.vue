@@ -1,101 +1,415 @@
 <template>
   <div class="library-container">
-
-    <!-- 상단 제목 -->
     <div class="page-title">
       <span>나의 서재</span>
     </div>
 
-    <!-- 검색창 + 버튼 -->
     <div class="search-row">
-
       <div class="center-box">
         <input
-            v-model="keyword"
-            type="text"
-            class="search-input"
-            placeholder="책 제목 또는 저자"
+          v-model.trim="keyword"
+          type="text"
+          class="search-input"
+          placeholder="책 제목 또는 저자를 입력하세요"
+          @keyup.enter="handleSearch"
         />
-        <button class="search-btn" @click="searchBooks">검색하기</button>
+        <button class="search-btn" @click="handleSearch">검색하기</button>
       </div>
-
     </div>
 
+    <div class="filter-row">
+      <button
+        v-for="option in filterOptions"
+        :key="option.value ?? 'ALL'"
+        :class="['filter-btn', { active: option.value === selectedStatus }]"
+        @click="changeFilter(option.value)"
+      >
+        {{ option.label }}
+      </button>
+    </div>
+
+    <div class="grid-wrapper">
+      <AddBookCard @click="openAddBookModal" />
+      <BookCard
+        v-for="book in books"
+        :key="book.myLibId"
+        :book="book"
+        :completing="completingBookId === book.myLibId"
+        @select="openBookDetail"
+        @complete="markAsRead"
+      />
+    </div>
+
+    <div
+      v-if="!books.length && !isLoading && !errorMessage"
+      class="empty-state"
+    >
+      {{ infoMessage || "아직 등록된 책이 없습니다. 첫 책을 추가해보세요!" }}
+    </div>
+
+    <div v-if="errorMessage" class="error-state">
+      {{ errorMessage }}
+    </div>
+
+    <div v-if="infoMessage && !errorMessage" class="notice-row">
+      {{ infoMessage }}
+    </div>
+
+    <div v-if="isLoading" class="loading-indicator">
+      책을 불러오는 중...
+    </div>
+
+    <div ref="infiniteTarget" class="observer-target"></div>
+
+    <ScrollArrow
+      :direction="arrowDirection"
+      @click="handleArrowClick"
+    />
+
+    <AddBookModal
+      :show="showAddModal"
+      @close="showAddModal = false"
+      @added="handleBookAdded"
+    />
+
+    <BookDetailModal
+      :show="showDetailModal"
+      :book="selectedBook"
+      @close="showDetailModal = false"
+    />
   </div>
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, onMounted, onBeforeUnmount, computed } from "vue";
+import axios from "axios";
+import BookCard from "@/components/mylib/BookCard.vue";
+import AddBookCard from "@/components/mylib/AddBookCard.vue";
+import AddBookModal from "@/components/mylib/AddBookModal.vue";
+import BookDetailModal from "@/components/mylib/BookDetailModal.vue";
+import ScrollArrow from "@/components/mylib/ScrollArrow.vue";
+
+const PAGE_SIZE = 8;
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "/api";
+const normalizedApiBase = API_BASE_URL.replace(/\/+$/, "");
+const myLibApiUrl = (path = "") => `${normalizedApiBase}/mylib${path}`;
+const FALLBACK_USER_ID = import.meta.env.VITE_MYLIB_USER_ID ?? null;
+
+if (!FALLBACK_USER_ID) {
+  console.warn(
+    "[MyLib] VITE_MYLIB_USER_ID is not set. Requests require authentication or a fallback ID."
+  );
+}
+
+const filterOptions = [
+  { label: "전체", value: null },
+  { label: "읽고 싶은", value: "WISH" },
+  { label: "읽는 중", value: "READING" },
+  { label: "완독", value: "READ" },
+];
 
 const keyword = ref("");
+const selectedStatus = ref(null);
+const books = ref([]);
+const page = ref(0);
+const hasMore = ref(true);
+const isLoading = ref(false);
+const errorMessage = ref("");
+const infoMessage = ref("");
+const completingBookId = ref(null);
+const showAddModal = ref(false);
+const showDetailModal = ref(false);
+const selectedBook = ref(null);
 
-const searchBooks = () => {
-  console.log("검색어:", keyword.value);
-  alert(`'${keyword.value}' 로 검색합니다`);
+const infiniteTarget = ref(null);
+let observer;
+
+const isAtBottom = ref(false);
+const arrowDirection = computed(() => (isAtBottom.value ? "up" : "down"));
+
+const parseApiResponse = (response) => {
+  const body = response?.data ?? response;
+  if (body?.success === false) {
+    throw new Error(body?.message || "서버에서 오류가 발생했습니다.");
+  }
+  return body?.data ?? body;
+};
+
+const loadBooks = async ({ reset = false } = {}) => {
+  if (isLoading.value || (!hasMore.value && !reset)) return;
+
+  if (reset) {
+    books.value = [];
+    page.value = 0;
+    hasMore.value = true;
+    errorMessage.value = "";
+    infoMessage.value = "";
+  }
+
+  isLoading.value = true;
+
+  try {
+
+    const response = await axios.get(myLibApiUrl("/books"), {
+      params: {
+        userId: FALLBACK_USER_ID || undefined,
+        keyword: keyword.value || undefined,
+        status: selectedStatus.value || undefined,
+        page: page.value,
+        size: PAGE_SIZE,
+      },
+      withCredentials: true,
+    });
+
+    const payload = parseApiResponse(response);
+    if (!payload) throw new Error("응답 데이터가 비어 있습니다.");
+
+    infoMessage.value = payload.notice || "";
+    hasMore.value = payload.hasMore;
+
+    if (reset) {
+      books.value = payload.books || [];
+    } else {
+      books.value = [...books.value, ...(payload.books || [])];
+    }
+
+    page.value += 1;
+  } catch (error) {
+    console.error(error);
+    errorMessage.value =
+      error.response?.data?.message ||
+      "나의 서재를 불러오는 중 오류가 발생했습니다.";
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+const handleSearch = () => {
+  loadBooks({ reset: true });
+};
+
+const changeFilter = (status) => {
+  if (selectedStatus.value === status) return;
+  selectedStatus.value = status;
+  handleSearch();
 };
 
 const openAddBookModal = () => {
-  alert("책 추가 모달을 열겠습니다.");
+  showAddModal.value = true;
 };
+
+const handleBookAdded = () => {
+  showAddModal.value = false;
+  loadBooks({ reset: true });
+};
+
+const openBookDetail = (book) => {
+  selectedBook.value = book;
+  showDetailModal.value = true;
+};
+
+const markAsRead = async (book) => {
+  if (book.status !== "READING" || completingBookId.value) {
+    return;
+  }
+
+  completingBookId.value = book.myLibId;
+
+  try {
+    await axios.patch(
+      myLibApiUrl(`/books/${book.myLibId}/status`),
+      { targetStatus: "READ" },
+      { withCredentials: true }
+    );
+
+    books.value = books.value.map((item) =>
+        item.myLibId === book.myLibId
+            ? {
+              ...item,
+              status: "READ",
+              badgeIssued: true,
+              displayType: "SPINE",
+            }
+            : item
+    );
+  } catch (error) {
+    console.error(error);
+    alert(
+        error.response?.data?.message ||
+        "책 상태를 변경하는 중 오류가 발생했습니다."
+    );
+  } finally {
+    completingBookId.value = null;
+  }
+};
+
+const handleArrowClick = () => {
+  if (isAtBottom.value) {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  } else {
+    window.scrollBy({ top: window.innerHeight, behavior: "smooth" });
+  }
+};
+
+const handleScrollState = () => {
+  const nearBottom =
+    window.innerHeight + window.scrollY >= document.body.offsetHeight - 160;
+  isAtBottom.value = nearBottom;
+};
+
+const setupObserver = () => {
+  if (observer) observer.disconnect();
+  observer = new IntersectionObserver(
+    (entries) => {
+      if (entries[0].isIntersecting) {
+        loadBooks();
+      }
+    },
+    { rootMargin: "0px 0px 120px 0px" }
+  );
+
+  if (infiniteTarget.value) {
+    observer.observe(infiniteTarget.value);
+  }
+};
+
+onMounted(() => {
+  setupObserver();
+  loadBooks({ reset: true });
+  window.addEventListener("scroll", handleScrollState);
+  handleScrollState();
+});
+
+onBeforeUnmount(() => {
+  if (observer) observer.disconnect();
+  window.removeEventListener("scroll", handleScrollState);
+});
 </script>
 
 <style scoped>
-/* 전체 레이아웃 */
 .library-container {
   max-width: 1100px;
   margin: 0 auto;
-  padding: 30px 20px;
+  padding: 40px 20px 120px;
   font-family: "Pretendard", sans-serif;
   text-align: center;
 }
 
-/* 제목 */
 .page-title {
   display: inline-block;
-  margin: 20px auto 10px auto;
-  padding: 14px 70px;
+  margin: 10px auto 18px auto;
+  padding: 16px 100px;
   border: 2px solid #df3e3e;
   border-radius: 40px;
-
-  font-size: 20px;
+  font-size: 22px;
   font-weight: 600;
   color: #df3e3e;
   background: #ffffff;
   box-shadow: 0 4px 10px rgba(223, 62, 62, 0.15);
 }
 
-/* 검색창 */
 .search-row {
-  display: flex;
-  align-items: center;
-  margin-top: 25px;
-  width: 100%;
-}
-
-/* 가운데 검색 영역 */
-.center-box {
-  flex: 2;
+  margin-top: 20px;
   display: flex;
   justify-content: center;
-  gap: 6px;
+}
+
+.center-box {
+  display: flex;
+  gap: 8px;
 }
 
 .search-input {
-  width: 240px;
-  height: 32px;
-  border: 1px solid #ddd;
-  border-radius: 16px;
-  padding: 0 12px;
-  background: #fafafa;
+  width: 280px;
+  height: 38px;
+  border: 1px solid #e2ddd6;
+  border-radius: 20px;
+  padding: 0 16px;
+  background: #fff;
+  font-size: 14px;
 }
 
 .search-btn {
-  height: 32px;
-  padding: 0 14px;
+  min-width: 90px;
+  height: 38px;
   border: none;
-  border-radius: 16px;
-  background: #ffd892;
+  border-radius: 20px;
+  background: #ffd992;
+  color: #6d4300;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.filter-row {
+  margin-top: 18px;
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+.filter-btn {
+  padding: 6px 18px;
+  border-radius: 20px;
+  border: 1px solid #ddd;
+  background: #fff;
   cursor: pointer;
   font-size: 13px;
+  color: #6e6e6e;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.filter-btn.active {
+  background: #ffb8b8;
+  color: white;
+  border-color: #ffb8b8;
+}
+
+.grid-wrapper {
+  margin-top: 40px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 28px;
+  justify-items: center;
+}
+
+.empty-state,
+.error-state,
+.notice-row {
+  margin-top: 24px;
+  font-size: 14px;
+}
+
+.empty-state {
+  color: #7f7f7f;
+}
+
+.error-state {
+  color: #d64545;
+  font-weight: 600;
+}
+
+.notice-row {
+  color: #a08a6c;
+}
+
+.loading-indicator {
+  margin-top: 20px;
+  color: #666;
+}
+
+.observer-target {
+  width: 100%;
+  height: 1px;
+}
+
+@media (max-width: 768px) {
+  .page-title {
+    padding: 12px 40px;
+    font-size: 18px;
+  }
+
+  .grid-wrapper {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  }
 }
 </style>
