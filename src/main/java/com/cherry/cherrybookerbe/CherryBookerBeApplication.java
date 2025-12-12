@@ -1,7 +1,6 @@
 package com.cherry.cherrybookerbe;
 
 import com.cherry.cherrybookerbe.common.config.AdminProperties;
-import com.cherry.cherrybookerbe.user.command.domain.entity.LoginType;
 import com.cherry.cherrybookerbe.user.command.domain.entity.User;
 import com.cherry.cherrybookerbe.user.command.domain.entity.UserRole;
 import com.cherry.cherrybookerbe.user.command.repository.UserRepository;
@@ -37,7 +36,6 @@ public class CherryBookerBeApplication {
                     .userName(adminProps.getName())
                     .userNickname("관리자")
                     .userRole(UserRole.ADMIN)
-                    .loginType(LoginType.GOOGLE)
                     .build();
 
             userRepository.save(admin);
