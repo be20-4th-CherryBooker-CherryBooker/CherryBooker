@@ -71,6 +71,8 @@ const isRegistering = ref(false);
 const errorMessage = ref("");
 const fallbackCover = "/images/default-book.png";
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "/api";
+const normalizedApiBase = API_BASE_URL.replace(/\/+$/, "");
+const myLibApiUrl = (path = "") => `${normalizedApiBase}/mylib${path}`;
 const FALLBACK_USER_ID = import.meta.env.VITE_MYLIB_USER_ID ?? null;
 
 if (!FALLBACK_USER_ID) {
@@ -92,9 +94,13 @@ const search = async () => {
   errorMessage.value = "";
   try {
     console.info("[MyLib] Searching external books:", keyword.value);
-    const { data } = await axios.get(`${API_BASE_URL}/api/mylib/library-books`, {
-      params: { keyword: keyword.value, size: 10 },
-      withCredentials: false,
+    const { data } = await axios.get(myLibApiUrl("/library-books"), {
+      params: {
+        keyword: keyword.value,
+        size: 10,
+        userId: FALLBACK_USER_ID || undefined,
+      },
+      withCredentials: true,
     });
     const payload = data?.data ?? data;
     results.value = Array.isArray(payload) ? payload : [];
@@ -113,7 +119,7 @@ const registerBook = async (book) => {
   isRegistering.value = true;
   try {
     await axios.post(
-      `${API_BASE_URL}/api/mylib/register-books`,
+      myLibApiUrl("/register-books"),
       {
         keyword: book.title,
         isbnHint: book.isbn,

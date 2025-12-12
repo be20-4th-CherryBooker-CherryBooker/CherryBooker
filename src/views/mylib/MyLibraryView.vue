@@ -91,6 +91,8 @@ import ScrollArrow from "@/components/mylib/ScrollArrow.vue";
 
 const PAGE_SIZE = 8;
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "/api";
+const normalizedApiBase = API_BASE_URL.replace(/\/+$/, "");
+const myLibApiUrl = (path = "") => `${normalizedApiBase}/mylib${path}`;
 const FALLBACK_USER_ID = import.meta.env.VITE_MYLIB_USER_ID ?? null;
 
 if (!FALLBACK_USER_ID) {
@@ -148,7 +150,7 @@ const loadBooks = async ({ reset = false } = {}) => {
 
   try {
 
-    const response = await axios.get(`${API_BASE_URL}/api/mylib/books`, {
+    const response = await axios.get(myLibApiUrl("/books"), {
       params: {
         userId: FALLBACK_USER_ID || undefined,
         keyword: keyword.value || undefined,
@@ -215,7 +217,7 @@ const markAsRead = async (book) => {
 
   try {
     await axios.patch(
-      `${API_BASE_URL}/api/mylib/books/${book.myLibId}/status`,
+      myLibApiUrl(`/books/${book.myLibId}/status`),
       { targetStatus: "READ" },
       { withCredentials: true }
     );
