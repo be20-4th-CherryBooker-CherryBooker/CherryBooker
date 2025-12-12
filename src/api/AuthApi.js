@@ -39,22 +39,3 @@ export const logoutApi = async () => {
     return response;
 };
 
-/**
- * 내 정보 조회 (마이페이지용)
- * @returns {Promise}
- */
-export const getUserMeApi = async () => {
-    const response = await api.get('/api/users/user/me');
-    return response;
-};
-
-/**
- * 닉네임 수정
- * @param {string} nickname - 새로운 닉네임
- */
-export const updateNicknameApi = async (nickname) => {
-    const response = await api.patch('/api/users/user', {
-        nickname: nickname
-    });
-    return response;
-};

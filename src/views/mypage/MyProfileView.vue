@@ -86,9 +86,11 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/AuthStore'
-import { updateNicknameApi } from '@/api/AuthApi'
+import { getMyProfileApi, updateNicknameApi } from '@/api/UserApi'
+import { logoutApi } from '@/api/AuthApi'
 
 const authStore = useAuthStore()
+const router = useRouter()
 
 // State
 const loading = ref(false)
@@ -96,37 +98,49 @@ const error = ref(null)
 const isEditingNickname = ref(false)
 const savingNickname = ref(false)
 const originalNickname = ref('')
-
-// Computed
 const nickname = ref('')
-const email = computed(() => authStore.user?.email || '-')
-const joinDate = computed(() => {
-  if (!authStore.user?.createdAt) return '-'
+const email = ref('-')
+const joinDate = ref('-')
 
-  const date = new Date(authStore.user.createdAt)
-  return date.toLocaleDateString('ko-KR', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit'
-  }).replace(/\. /g, '.').replace(/\.$/, '')
-})
 
-// Methods
 const loadUserInfo = async () => {
   loading.value = true
   error.value = null
 
   try {
-    await authStore.fetchUserMe()
+    console.log('📋 프로필 정보 조회 시작')
 
-    // 닉네임 설정
-    nickname.value = authStore.user?.nickname || ''
+    const response = await getMyProfileApi()
+    const userData = response.data
+
+    console.log('✅ 프로필 정보 로드 성공:', userData)
+
+    // 데이터 설정
+    nickname.value = userData.nickname || ''
     originalNickname.value = nickname.value
+    email.value = userData.email || '-'
 
-    console.log('✅ 사용자 정보 로드 성공:', authStore.user)
+    // 가입일
+    if (userData.createdAt) {
+      const date = new Date(userData.createdAt)
+      joinDate.value = date.toLocaleDateString('ko-KR', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      }).replace(/\. /g, '.').replace(/\.$/, '')
+    }
+
+    // AuthStore 업데이트
+    if (authStore.user) {
+      authStore.user.nickname = userData.nickname
+      authStore.user.email = userData.email
+      authStore.user.createdAt = userData.createdAt
+    }
+
   } catch (e) {
-    console.error('❌ 사용자 정보 로드 실패:', e)
-    error.value = '사용자 정보를 불러오는데 실패했습니다.'
+    console.error('❌ 프로필 정보 로드 실패:', e)
+    const errorMessage = e.response?.data?.message || '사용자 정보를 불러오는데 실패했습니다.'
+    error.value = errorMessage
   } finally {
     loading.value = false
   }
@@ -163,17 +177,12 @@ const saveNickname = async () => {
   try {
     console.log('📝 닉네임 수정 요청:', trimmedNickname)
 
-    // 백엔드 API 호출
     await updateNicknameApi(trimmedNickname)
 
     console.log('✅ 닉네임 수정 성공')
 
-    // 사용자 정보 다시 불러오기
-    await authStore.fetchUserMe()
+    await loadUserInfo()
 
-    // 상태 업데이트
-    nickname.value = authStore.user.nickname
-    originalNickname.value = nickname.value
     isEditingNickname.value = false
 
     alert('닉네임이 수정되었습니다.')
@@ -192,15 +201,20 @@ const saveNickname = async () => {
 
 // 로그아웃
 const handleLogout = async () => {
-  if (confirm('로그아웃 하시겠습니까?')) {
-    try {
-      await authStore.logout()
-      console.log('✅ 로그아웃 성공')
-    } catch (e) {
-      console.error('❌ 로그아웃 실패:', e)
-      // 실패해도 로컬 상태는 클리어
-      authStore.clearAuthState()
-    }
+  if (!confirm('로그아웃 하시겠습니까?')) return
+
+  try {
+    console.log('🚪 로그아웃 요청')
+    await logoutApi()
+    console.log('✅ 로그아웃 성공')
+  } catch (e) {
+    console.error('❌ 로그아웃 실패:', e)
+    // 실패해도 클라이언트에서는 로그아웃 처리
+  } finally {
+    authStore.clearAuthState()
+
+    // 로그인 페이지로 강제 이동
+    router.push({ name: '/login' }) // 또는 path: '/login'
   }
 }
 
@@ -214,14 +228,7 @@ const handleWithdraw = () => {
 
 // 마운트 시 사용자 정보 로드
 onMounted(() => {
-  // 상세 정보가 없으면 가져오기
-  if (!authStore.user?.nickname || !authStore.user?.createdAt) {
-    loadUserInfo()
-  } else {
-    // 이미 있으면 바로 설정
-    nickname.value = authStore.user.nickname
-    originalNickname.value = nickname.value
-  }
+  loadUserInfo()
 })
 </script>
 
