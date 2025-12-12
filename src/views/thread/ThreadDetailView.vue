@@ -71,12 +71,13 @@
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/authStore'
 import { fetchThreadDetail, deleteThread, deleteReply } from '@/api/threadApi'
 import ThreadCreateModal from '@/components/thread/ThreadCreateModal.vue'
 
 const route = useRoute()
+const router = useRouter()
 const authStore = useAuthStore()
 
 // 새로고침 이후 복구
@@ -173,10 +174,12 @@ const onDelete = async (message) => {
   try {
     if (message.isRoot) {
       await deleteThread(message.id)
+      router.push({ name: 'threadList' })
+      return
     } else {
       await deleteReply(message.replyId)
+      await loadDetail()
     }
-    await loadDetail()
   } catch (e) {
     console.error('삭제 실패', e)
     alert('삭제에 실패했습니다.')

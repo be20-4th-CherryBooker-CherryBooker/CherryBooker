@@ -7,7 +7,7 @@ async function getCurrentUserId() {
     const authStore = useAuthStore()
 
     // 로그인 안 되어 있으면 바로 에러
-    if (!authStore.isLoggedIn) {
+    if (!authStore.isAuthenticated) {
         throw new Error('[notificationApi] 로그인 상태가 아닙니다.')
     }
 

@@ -11,26 +11,53 @@
       />
     </div>
 
-    <!-- 간단 페이징 영역 (페이지당 4개) -->
+    <!-- 페이징 영역 -->
     <div class="pagination" v-if="pagination.totalPages > 1">
+      <!-- 맨 처음 (<<) -->
       <button
-          class="page-btn"
+          class="page-nav-btn"
+          :disabled="pagination.currentPage === 0"
+          @click="changePage(0)"
+      >
+        &laquo;
+      </button>
+
+      <!-- 이전 (<) -->
+      <button
+          class="page-nav-btn"
           :disabled="pagination.currentPage === 0"
           @click="changePage(pagination.currentPage - 1)"
       >
-        이전
+        &lt;
       </button>
 
-      <span class="page-info">
-        {{ pagination.currentPage + 1 }} / {{ pagination.totalPages }}
-      </span>
-
+      <!-- 페이지 숫자들 -->
       <button
-          class="page-btn"
+          v-for="page in pageNumbers"
+          :key="page"
+          class="page-number"
+          :class="{ active: page === pagination.currentPage }"
+          @click="changePage(page)"
+      >
+        {{ page + 1 }}
+      </button>
+
+      <!-- 다음 (>) -->
+      <button
+          class="page-nav-btn"
           :disabled="pagination.currentPage >= pagination.totalPages - 1"
           @click="changePage(pagination.currentPage + 1)"
       >
-        다음
+        &gt;
+      </button>
+
+      <!-- 맨 끝 (>>) -->
+      <button
+          class="page-nav-btn"
+          :disabled="pagination.currentPage >= pagination.totalPages - 1"
+          @click="changePage(pagination.totalPages - 1)"
+      >
+        &raquo;
       </button>
     </div>
 
@@ -48,11 +75,11 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import ThreadItem from '@/components/thread/ThreadItem.vue'
 import ThreadCreateModal from '@/components/thread/ThreadCreateModal.vue'
 import { fetchThreads } from '@/api/threadApi'
-import { useAuthStore } from '@/stores/authStore'
+import { useAuthStore } from '@/stores/AuthStore'
 import { useRouter } from 'vue-router'
 
 const threads = ref([])
@@ -84,9 +111,37 @@ const changePage = (page) => {
   loadThreads(page)
 }
 
+/**
+ * 가운데 숫자 버튼들 (1 2 3 4 5 ...)
+ * - 최대 5개까지만 보여주고, 현재 페이지 기준으로 앞뒤를 잘라서 노출
+ */
+const pageNumbers = computed(() => {
+  const total = pagination.value.totalPages || 0
+  const current = pagination.value.currentPage || 0
+  const maxToShow = 5
+
+  if (total <= maxToShow) {
+    return Array.from({ length: total }, (_, i) => i)
+  }
+
+  let start = current - Math.floor(maxToShow / 2)
+  let end = current + Math.floor(maxToShow / 2)
+
+  if (start < 0) {
+    start = 0
+    end = maxToShow - 1
+  }
+  if (end > total - 1) {
+    end = total - 1
+    start = total - maxToShow
+  }
+
+  return Array.from({ length: end - start + 1 }, (_, i) => start + i)
+})
+
 const openCreateModal = () => {
   // 로그인 안 한 경우 로그인 페이지로 유도
-  if (!authStore.isLoggedIn) {
+  if (!authStore.isAuthenticated) {
     alert('로그인 후 이용 가능합니다.')
     router.push({ name: 'login' })
     return
@@ -106,8 +161,6 @@ const onThreadCreated = () => {
 
 onMounted(() => loadThreads(0))
 </script>
-
-
 
 <style scoped>
 .threads-container {
@@ -141,33 +194,54 @@ onMounted(() => loadThreads(0))
   align-items: center; /* 카드들을 가운데 정렬 */
 }
 
-/* 페이징 영역 최소 스타일만 추가 */
+/* ===== 페이징 영역 ===== */
 .pagination {
   margin-top: 20px;
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
 }
 
-.page-btn {
-  background: #ffa83d;
+/* <<, <, >, >> 버튼 */
+.page-nav-btn {
+  min-width: 32px;
+  height: 32px;
+  padding: 0 10px;
+  border-radius: 16px;
   border: none;
-  padding: 6px 12px;
-  border-radius: 18px;
-  color: #fff;
+  background: #ffe3b5;
+  color: #444;
+  font-size: 14px;
   cursor: pointer;
-  font-size: 13px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
 }
 
-.page-btn:disabled {
+/* 번호 버튼 */
+.page-number {
+  width: 40px;
+  height: 40px;
+  border-radius: 14px;
+  border: none;
+  background: #f6f6f6;
+  color: #333;
+  font-size: 16px;
+  cursor: pointer;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.08);
+}
+
+/* 현재 페이지 (강조 색) */
+.page-number.active {
+  background: #ff8f8f;   /* 필요하면 프로젝트 색상에 맞게 조정 */
+  color: #fff;
+}
+
+/* disabled 상태 */
+.page-nav-btn:disabled,
+.page-number:disabled {
   opacity: 0.4;
   cursor: default;
-}
-
-.page-info {
-  font-size: 13px;
-  color: #555;
+  box-shadow: none;
 }
 
 .create-btn {
