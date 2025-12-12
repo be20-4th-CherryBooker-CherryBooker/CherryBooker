@@ -32,6 +32,14 @@
           <span class="label">삭제 횟수</span>
           <span class="value">{{ detail.deleteCount }}</span>
         </div>
+
+        <!-- ⭐ 중요 안내 -->
+        <div class="info-item notice">
+          <span class="label">처리 범위</span>
+          <span class="value highlight">
+            동일 게시물의 모든 신고에 동일하게 적용됨
+          </span>
+        </div>
       </div>
 
       <!-- 신고 글귀 -->
@@ -45,20 +53,51 @@
     <div class="box admin-box">
       <h3>관리자 처리</h3>
 
-      <textarea
-          v-model="adminComment"
-          placeholder="관리자가 처리한 신고 내용 관련 코멘트"
-          class="admin-textarea"
-      ></textarea>
+      <!-- 이미 처리된 신고 -->
+      <div v-if="detail.status !== 'PENDING'" class="already-processed">
+        <p>이미 처리된 신고입니다.</p>
+        <p class="processed-status">
+          처리 상태: {{ statusText(detail.status) }}
+        </p>
+        <p v-if="detail.adminComment" class="admin-comment">
+          관리자 코멘트: {{ detail.adminComment }}
+        </p>
+      </div>
 
-      <div class="btn-box">
-        <button @click="process('VALID')" class="btn done">신고 처리 완료</button>
-        <button @click="process('REJECTED')" class="btn reject">신고 처리 반려</button>
+      <!-- 처리 가능 상태 -->
+      <div v-else>
+        <textarea
+            v-model="adminComment"
+            placeholder="관리자가 처리한 신고 내용 관련 코멘트"
+            class="admin-textarea"
+        ></textarea>
+
+        <p class="warning-text">
+          게시물에 대한 다수 신고에 동일 적용.
+        </p>
+
+        <div class="btn-box">
+          <button
+              class="btn done"
+              :disabled="processing"
+              @click="process('VALID')"
+          >
+            신고 처리 완료
+          </button>
+          <button
+              class="btn reject"
+              :disabled="processing"
+              @click="process('REJECTED')"
+          >
+            신고 처리 반려
+          </button>
+        </div>
       </div>
     </div>
 
   </div>
 </template>
+
 <script setup>
 import { ref, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
@@ -69,6 +108,7 @@ const router = useRouter();
 
 const detail = ref({});
 const adminComment = ref("");
+const processing = ref(false);
 
 const loadDetail = async () => {
   const res = await getReportDetail(route.params.reportId);
@@ -80,10 +120,19 @@ const goBack = () => {
 };
 
 const process = async (status) => {
+  if (processing.value) return;
+
+  if (!adminComment.value.trim()) {
+    alert("관리자 코멘트를 입력해주세요.");
+    return;
+  }
+
+  processing.value = true;
+
   try {
     await processReport({
       reportId: detail.value.reportId,
-      status: status,                  // VALID or REJECTED
+      status,
       adminComment: adminComment.value,
     });
 
@@ -92,12 +141,20 @@ const process = async (status) => {
   } catch (e) {
     console.error("🚨 신고 처리 오류:", e);
     alert("신고 처리 실패!");
+  } finally {
+    processing.value = false;
   }
 };
 
+const statusText = (status) => {
+  if (status === "PENDING") return "대기중";
+  if (status === "VALID") return "처리됨(승인)";
+  if (status === "REJECTED") return "처리됨(반려)";
+};
 
 onMounted(loadDetail);
 </script>
+
 <style scoped>
 .detail-container {
   max-width: 1000px;
@@ -106,7 +163,6 @@ onMounted(loadDetail);
   font-family: "Pretendard", sans-serif;
 }
 
-/* 상단 제목 + 뒤로가기 버튼 */
 .header-row {
   display: flex;
   justify-content: space-between;
@@ -117,22 +173,12 @@ onMounted(loadDetail);
   background: none;
   border: none;
   color: #d94848;
-  font-size: 15px;
   cursor: pointer;
-  padding: 6px 12px;
-  border-radius: 8px;
-  transition: 0.2s;
-}
-
-.back-btn:hover {
-  background: #ffeaea;
 }
 
 .title {
   font-size: 22px;
   margin-bottom: 25px;
-  font-weight: 600;
-  color: #444;
 }
 
 .layout-row {
@@ -148,43 +194,24 @@ onMounted(loadDetail);
   box-shadow: 0px 3px 10px rgba(0, 0, 0, 0.05);
 }
 
-.info-box {
-  width: 45%;
-}
-
-.content-box {
-  width: 55%;
-}
-
 .info-item {
   display: flex;
   justify-content: space-between;
   margin: 12px 0;
 }
 
-.label {
-  font-weight: 500;
-  color: #555;
-}
-
-.value {
-  font-weight: 600;
+.notice {
+  margin-top: 20px;
 }
 
 .highlight {
   color: #d35457;
+  font-weight: 600;
 }
 
 .quote {
-  margin-top: 15px;
   white-space: pre-line;
   line-height: 1.6;
-  font-size: 15px;
-  color: #333;
-}
-
-.admin-box {
-  margin-top: 20px;
 }
 
 .admin-textarea {
@@ -194,14 +221,12 @@ onMounted(loadDetail);
   padding: 14px;
   border-radius: 12px;
   border: 1px solid #ddd;
-  font-size: 14px;
-  outline: none;
-  resize: none;
 }
 
-.admin-textarea:focus {
-  border-color: #e88e8e;
-  box-shadow: 0 0 4px rgba(255, 150, 150, 0.4);
+.warning-text {
+  margin-top: 10px;
+  font-size: 13px;
+  color: #888;
 }
 
 .btn-box {
@@ -214,9 +239,7 @@ onMounted(loadDetail);
 .btn {
   padding: 10px 22px;
   border-radius: 30px;
-  font-size: 15px;
   cursor: pointer;
-  transition: 0.2s;
 }
 
 .done {
@@ -225,19 +248,24 @@ onMounted(loadDetail);
   border: 1px solid #d94848;
 }
 
-.done:hover {
-  background: #d94848;
-  color: #fff;
-}
-
 .reject {
   background: white;
   color: #d94848;
   border: 1px solid #d94848;
 }
 
-.reject:hover {
-  background: #d94848;
-  color: #fff;
+.already-processed {
+  color: #666;
+  font-size: 14px;
+}
+
+.processed-status {
+  margin-top: 8px;
+  font-weight: 600;
+}
+
+.admin-comment {
+  margin-top: 10px;
+  color: #444;
 }
 </style>

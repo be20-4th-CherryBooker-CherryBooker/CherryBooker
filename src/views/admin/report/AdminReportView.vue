@@ -28,6 +28,8 @@
         <!-- 상태 필터 (PENDING만) -->
         <select v-model="filterStatus">
           <option value="PENDING">대기중</option>
+          <option value="REJECTED">반려</option>
+          <option value="VALID">승인</option>
         </select>
       </div>
 
@@ -73,75 +75,80 @@
   </div>
 </template>
 
-
 <script setup>
-import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { getReportSummary, getReportList } from "@/api/adminReportApi";
+import { ref, computed, onMounted, watch } from "vue";
 
 const router = useRouter();
 
-//  요약 데이터
+// --------------------
+// 상태
+// --------------------
 const summary = ref({
   totalCount: 0,
   completedCount: 0,
   pendingCount: 0,
 });
 
-//  신고 목록
 const reportList = ref([]);
-
-// 필터 → 기본값 PENDING
 const filterStatus = ref("PENDING");
 
-// 페이지네이션
 const currentPage = ref(1);
 const pageSize = 7;
 
-// 데이터 로딩
+// --------------------
+// 데이터 조회 함수
+// --------------------
+const fetchReports = async () => {
+  try {
+    const res = await getReportList(filterStatus.value);
+    reportList.value = res.data;
+  } catch (e) {
+    console.error("❌ 신고 목록 조회 실패:", e);
+  }
+};
+
+// --------------------
+// 최초 로딩
+// --------------------
 onMounted(async () => {
   try {
     const summaryRes = await getReportSummary();
-    const listRes = await getReportList();
     summary.value = summaryRes.data;
-    reportList.value = listRes.data;
+    await fetchReports();
   } catch (e) {
     console.error("❌ 관리자 신고 조회 실패:", e);
   }
 });
 
+// --------------------
+// 상태 변경 감지
+// --------------------
+watch(filterStatus, async () => {
+  currentPage.value = 1;
+  await fetchReports();
+});
 
-
-
-// 필터 + 페이지네이션 적용 목록
+// --------------------
+// 페이지네이션
+// --------------------
 const paginatedList = computed(() => {
-  let list = reportList.value;
-
-  if (filterStatus.value) {
-    list = list.filter((r) => r.status === filterStatus.value);
-  }
-
   const start = (currentPage.value - 1) * pageSize;
-  return list.slice(start, start + pageSize);
+  return reportList.value.slice(start, start + pageSize);
 });
 
-// 총 페이지 수
 const totalPages = computed(() => {
-  let list = reportList.value;
-
-  if (filterStatus.value) {
-    list = list.filter((r) => r.status === filterStatus.value);
-  }
-
-  return Math.ceil(list.length / pageSize);
+  return Math.ceil(reportList.value.length / pageSize);
 });
 
-// 페이지 이동
+// --------------------
+// 액션
+// --------------------
 const movePage = (page) => {
   currentPage.value = page;
 };
 
-// 상세 이동
 const goDetail = (reportId) => {
   if (!reportId) {
     alert("reportId 없음 — 백엔드 응답 확인 필요");
@@ -150,21 +157,21 @@ const goDetail = (reportId) => {
   router.push(`/admin/reports/${reportId}`);
 };
 
-// 상태 한글 변환
+// --------------------
+// 유틸
+// --------------------
 const statusText = (status) => {
   if (status === "PENDING") return "대기중";
   if (status === "VALID") return "처리됨(정지)";
   if (status === "REJECTED") return "처리됨(반려)";
 };
 
-// 상태 색상
 const statusClass = (status) => {
   if (status === "VALID") return "green-text";
   if (status === "REJECTED") return "red-text";
   return "gray-text";
 };
 
-// 날짜 포맷
 const formatDate = (date) => {
   return date?.replace("T", " ").substring(0, 10);
 };

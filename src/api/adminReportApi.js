@@ -8,11 +8,14 @@ export const getReportSummary = async () => {
     return res.data;
 };
 
-// 신고 목록 조회
-export const getReportList = async () => {
-    const res = await api.get(API_BASE);
+// 신고 목록 조회 (status별)
+export const getReportList = async (status) => {
+    const res = await api.get(API_BASE, {
+        params: { status }
+    });
     return res.data;
 };
+
 
 // 신고 상세 조회
 export const getReportDetail = async (reportId) => {
