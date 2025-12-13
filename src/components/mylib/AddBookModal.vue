@@ -57,6 +57,7 @@
 <script setup>
 import { ref } from "vue";
 import api from "@/axios";
+import { useAuthStore } from "@/stores/AuthStore";
 
 const props = defineProps({
   show: Boolean,
@@ -72,13 +73,7 @@ const errorMessage = ref("");
 const fallbackCover = "/images/default-book.png";
 const MYLIB_BASE_URL = "/api/mylib";
 const myLibApiUrl = (path = "") => `${MYLIB_BASE_URL}${path}`;
-const FALLBACK_USER_ID = import.meta.env.VITE_MYLIB_USER_ID ?? null;
-
-if (!FALLBACK_USER_ID) {
-  console.warn(
-    "[MyLib] VITE_MYLIB_USER_ID is not set. Registering books requires authentication."
-  );
-}
+const authStore = useAuthStore();
 
 const close = () => {
   keyword.value = "";
@@ -87,8 +82,16 @@ const close = () => {
   emit("close");
 };
 
+const assertAuthenticated = () => {
+  if (authStore.isAuthenticated) {
+    return true;
+  }
+  errorMessage.value = "로그인이 필요합니다.";
+  return false;
+};
+
 const search = async () => {
-  if (!keyword.value) return;
+  if (!keyword.value || !assertAuthenticated()) return;
   isLoading.value = true;
   errorMessage.value = "";
   try {
@@ -97,7 +100,6 @@ const search = async () => {
       params: {
         keyword: keyword.value,
         size: 10,
-        userId: FALLBACK_USER_ID || undefined,
       },
       withCredentials: true,
     });
@@ -114,7 +116,7 @@ const search = async () => {
 };
 
 const registerBook = async (book) => {
-  if (isRegistering.value) return;
+  if (isRegistering.value || !assertAuthenticated()) return;
   isRegistering.value = true;
   try {
     await api.post(
@@ -123,10 +125,7 @@ const registerBook = async (book) => {
         keyword: book.title,
         isbnHint: book.isbn,
       },
-      {
-        params: { userId: FALLBACK_USER_ID || undefined },
-        withCredentials: true,
-      }
+      { withCredentials: true }
     );
     emit("added");
     close();

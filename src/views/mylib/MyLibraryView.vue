@@ -88,17 +88,12 @@ import AddBookCard from "@/components/mylib/AddBookCard.vue";
 import AddBookModal from "@/components/mylib/AddBookModal.vue";
 import BookDetailModal from "@/components/mylib/BookDetailModal.vue";
 import ScrollArrow from "@/components/mylib/ScrollArrow.vue";
+import { useAuthStore } from "@/stores/AuthStore";
 
 const PAGE_SIZE = 8;
 const MYLIB_BASE_URL = "/api/mylib";
 const myLibApiUrl = (path = "") => `${MYLIB_BASE_URL}${path}`;
-const FALLBACK_USER_ID = import.meta.env.VITE_MYLIB_USER_ID ?? null;
-
-if (!FALLBACK_USER_ID) {
-  console.warn(
-    "[MyLib] VITE_MYLIB_USER_ID is not set. Requests require authentication or a fallback ID."
-  );
-}
+const authStore = useAuthStore();
 
 const filterOptions = [
   { label: "전체", value: null },
@@ -134,8 +129,17 @@ const parseApiResponse = (response) => {
   return body?.data ?? body;
 };
 
+const ensureAuthenticated = () => {
+  if (authStore.isAuthenticated) {
+    return true;
+  }
+  errorMessage.value = "로그인이 필요합니다.";
+  return false;
+};
+
 const loadBooks = async ({ reset = false } = {}) => {
-  if (isLoading.value || (!hasMore.value && !reset)) return;
+  if (!ensureAuthenticated() || isLoading.value || (!hasMore.value && !reset))
+    return;
 
   if (reset) {
     books.value = [];
@@ -151,7 +155,6 @@ const loadBooks = async ({ reset = false } = {}) => {
 
     const response = await api.get(myLibApiUrl("/books"), {
       params: {
-        userId: FALLBACK_USER_ID || undefined,
         keyword: keyword.value || undefined,
         status: selectedStatus.value || undefined,
         page: page.value,
