@@ -1,6 +1,8 @@
 package com.cherry.cherrybookerbe.notification.command.controller;
 
-import com.cherry.cherrybookerbe.common.dto.ApiResponse; // 프로젝트 공통 응답 DTO가 있다면 사용, 없으면 직접 정의해서 사용
+import com.cherry.cherrybookerbe.common.dto.ApiResponse;
+import com.cherry.cherrybookerbe.common.security.auth.UserPrincipal;
+import com.cherry.cherrybookerbe.notification.command.dto.request.NotificationBroadcastRequest;
 import com.cherry.cherrybookerbe.notification.command.dto.request.NotificationSendRequest;
 import com.cherry.cherrybookerbe.notification.command.dto.request.NotificationTemplateCreateRequest;
 import com.cherry.cherrybookerbe.notification.command.dto.request.NotificationTemplateUpdateRequest;
@@ -28,40 +30,58 @@ public class NotificationCommandController {
     @PatchMapping("/api/notifications/me/{notificationId}/read")
     public ResponseEntity<ApiResponse<Void>> markRead(
             @PathVariable Integer notificationId,
-            @AuthenticationPrincipal(expression = "userId") Integer userId // principal.id 에 맞춰 수정
+            @AuthenticationPrincipal UserPrincipal principal
     ) {
+        if (principal == null || principal.userId() == null) {
+            throw new AccessDeniedException("인증 정보가 없습니다.");
+        }
+
+        Integer userId = principal.userId();
         commandService.markRead(userId, notificationId);
+
         return ResponseEntity.ok(ApiResponse.success(null));
     }
 
     @PatchMapping("/api/notifications/me/read-all")
     public ResponseEntity<ApiResponse<Void>> markAllRead(
-            @AuthenticationPrincipal(expression = "userId") Integer userId
+            @AuthenticationPrincipal UserPrincipal principal
     ) {
-        if (userId == null) {
+        if (principal == null || principal.userId() == null) {
             throw new AccessDeniedException("인증 정보가 없습니다.");
         }
+
+        Integer userId = principal.userId();
         commandService.markAllRead(userId);
+
         return ResponseEntity.ok(ApiResponse.success(null));
     }
 
     @DeleteMapping("/api/notifications/me/{notificationId}")
     public ResponseEntity<ApiResponse<Void>> deleteNotification(
             @PathVariable Integer notificationId,
-            @AuthenticationPrincipal(expression = "userId") Integer userId
+            @AuthenticationPrincipal UserPrincipal principal
     ) {
+        if (principal == null || principal.userId() == null) {
+            throw new AccessDeniedException("인증 정보가 없습니다.");
+        }
+
+        Integer userId = principal.userId();
         commandService.deleteNotification(userId, notificationId);
+
         return ResponseEntity.ok(ApiResponse.success(null));
     }
 
     @DeleteMapping("/api/notifications/me/read")
     public ResponseEntity<ApiResponse<Void>> deleteAllRead(
-            @AuthenticationPrincipal(expression = "userId") Integer userId
+            @AuthenticationPrincipal UserPrincipal principal
     ) {
-        if (userId == null) {
+        if (principal == null || principal.userId() == null) {
             throw new AccessDeniedException("인증 정보가 없습니다.");
         }
+
+        Integer userId = principal.userId();
         commandService.deleteAllRead(userId);
+
         return ResponseEntity.ok(ApiResponse.success(null));
     }
 
@@ -105,5 +125,15 @@ public class NotificationCommandController {
     ) {
         var res = commandService.sendByTemplate(templateId, request);
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(ApiResponse.success(res));
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping("/api/admin/notifications/templates/{templateId}/send-all")
+    public ResponseEntity<ApiResponse<Void>> sendToAllByTemplate(
+            @PathVariable Integer templateId,
+            @RequestBody(required = false) NotificationBroadcastRequest request
+    ) {
+        commandService.sendToAllByTemplate(templateId, request);
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body(ApiResponse.success(null));
     }
 }

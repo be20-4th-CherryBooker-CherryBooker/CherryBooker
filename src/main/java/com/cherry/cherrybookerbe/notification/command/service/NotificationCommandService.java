@@ -8,6 +8,7 @@ import com.cherry.cherrybookerbe.notification.command.domain.enums.NotificationT
 import com.cherry.cherrybookerbe.notification.command.domain.repository.NotificationRepository;
 import com.cherry.cherrybookerbe.notification.command.domain.repository.NotificationSendLogRepository;
 import com.cherry.cherrybookerbe.notification.command.domain.repository.NotificationTemplateRepository;
+import com.cherry.cherrybookerbe.notification.command.dto.request.NotificationBroadcastRequest;
 import com.cherry.cherrybookerbe.notification.command.dto.request.NotificationSendRequest;
 import com.cherry.cherrybookerbe.notification.command.dto.request.NotificationTemplateCreateRequest;
 import com.cherry.cherrybookerbe.notification.command.dto.request.NotificationTemplateUpdateRequest;
@@ -15,10 +16,12 @@ import com.cherry.cherrybookerbe.notification.command.dto.response.NotificationD
 import com.cherry.cherrybookerbe.notification.command.dto.response.NotificationTemplateResponse;
 import com.cherry.cherrybookerbe.notification.command.event.NotificationCreatedEvent;
 import com.cherry.cherrybookerbe.notification.command.event.NotificationReadEvent;
+import com.cherry.cherrybookerbe.user.command.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
@@ -31,13 +34,14 @@ import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
+@Transactional(transactionManager = "transactionManager")
 public class NotificationCommandService {
 
     private final NotificationRepository notificationRepository;
     private final NotificationTemplateRepository templateRepository;
     private final NotificationSendLogRepository sendLogRepository;
     private final ApplicationEventPublisher eventPublisher;
+    private final UserRepository userRepository;
 
     // ============ 템플릿 CUD ============
 
@@ -102,6 +106,17 @@ public class NotificationCommandService {
 
         Notification saved = notificationRepository.save(notification);
 
+        notificationRepository.flush();
+
+        if (saved.getId() == null) {
+            throw new ResponseStatusException(
+                    HttpStatus.INTERNAL_SERVER_ERROR,
+                    "알림 저장은 되었으나 PK(alarm_id)를 생성/조회하지 못했습니다. alarm_log PK/auto_increment 및 타입을 점검하세요."
+            );
+        }
+
+        long unreadAfterInsert = notificationRepository.countByUserIdAndReadFalse(request.getTargetUserId());
+
         // 발송 로그 기록
         NotificationSendLog logEntity = NotificationSendLog.builder()
                 .template(template)
@@ -111,19 +126,20 @@ public class NotificationCommandService {
                 .build();
         sendLogRepository.save(logEntity);
 
+        Integer nid = saved.getId();
+        LocalDateTime createdAt = saved.getCreatedAt();
+
         // 커밋 후 SSE 이벤트 (새 알림 + 미읽음 카운트)
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
             @Override
             public void afterCommit() {
-                long unread = notificationRepository.countByUserIdAndReadFalse(request.getTargetUserId());
-
                 eventPublisher.publishEvent(NotificationCreatedEvent.of(
                         request.getTargetUserId(),
-                        saved.getId(),
-                        saved.getTitle(),
-                        saved.getContent(),
-                        saved.getCreatedAt(),
-                        unread
+                        nid,
+                        mergedTitle,
+                        mergedBody,
+                        createdAt,
+                        unreadAfterInsert
                 ));
             }
         });
@@ -132,6 +148,66 @@ public class NotificationCommandService {
                 .notificationId(saved.getId())
                 .build();
     }
+
+    public void sendToAllByTemplate(Integer templateId, NotificationBroadcastRequest request) {
+        NotificationTemplate template = templateRepository.findById(templateId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "템플릿을 찾을 수 없습니다."));
+
+        if (template.isDeleted()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "삭제된 템플릿입니다.");
+        }
+        if (template.getType() != NotificationTemplateType.SYSTEM) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "SYSTEM 템플릿만 전체 발송할 수 있습니다.");
+        }
+
+        Map<String, String> vars = (request == null) ? null : request.getVariables();
+
+        String mergedTitle = mergeVariables(template.getTitle(), vars);
+        String mergedBody  = mergeVariables(template.getBody(), vars);
+
+        List<Integer> userIds = userRepository.findAllUserIds();
+
+        List<Notification> notifications = userIds.stream()
+                .map(uid -> Notification.builder()
+                        .userId(uid)
+                        .title(mergedTitle)
+                        .content(mergedBody)
+                        .build())
+                .toList();
+
+        // ID/createdAt 확보하려면 반환값을 받는 게 좋습니다.
+        List<Notification> savedList = notificationRepository.saveAll(notifications);
+
+        NotificationSendLog logEntity = NotificationSendLog.builder()
+                .template(template)
+                .status(NotificationSendStatus.SUCCESS)
+                .bodySnapshot(mergedBody)
+                .sentAt(LocalDateTime.now())
+                .build();
+        sendLogRepository.save(logEntity);
+
+        // 커밋 후 SSE 이벤트
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                for (Notification saved : savedList) {
+                    Integer uid = saved.getUserId();
+
+                    long unread = notificationRepository.countByUserIdAndReadFalse(uid);
+
+                    eventPublisher.publishEvent(NotificationCreatedEvent.of(
+                            uid,
+                            saved.getId(),
+                            saved.getTitle(),
+                            saved.getContent(),
+                            saved.getCreatedAt(),
+                            unread
+                    ));
+                }
+            }
+        });
+    }
+
 
     // ============ 읽음 / 삭제 ============
 
@@ -207,5 +283,26 @@ public class NotificationCommandService {
             merged = merged.replace(placeholder, Objects.toString(entry.getValue(), ""));
         }
         return merged;
+    }
+
+    @Transactional(transactionManager = "transactionManager", propagation = Propagation.REQUIRES_NEW)
+    public void notifyThreadReply(Integer targetUserId, Integer threadId, String writerNickname) {
+
+        NotificationTemplate template = templateRepository
+                .findByTypeAndDeletedFalse(NotificationTemplateType.EVENT_THREAD_REPLY)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.INTERNAL_SERVER_ERROR,
+                        "EVENT_THREAD_REPLY 템플릿이 없습니다."
+                ));
+
+        NotificationSendRequest req = NotificationSendRequest.builder()
+                .targetUserId(targetUserId)
+                .variables(Map.of(
+                        "writerNickname", writerNickname,
+                        "threadId", String.valueOf(threadId)
+                ))
+                .build();
+
+        sendByTemplate(template.getId(), req);
     }
 }

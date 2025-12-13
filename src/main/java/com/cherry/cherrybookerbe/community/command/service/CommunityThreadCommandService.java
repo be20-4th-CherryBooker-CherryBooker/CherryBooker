@@ -8,19 +8,31 @@ import com.cherry.cherrybookerbe.community.command.dto.request.UpdateCommunityRe
 import com.cherry.cherrybookerbe.community.command.dto.request.UpdateCommunityThreadRequest;
 import com.cherry.cherrybookerbe.community.command.dto.response.CommunityReplyCommandResponse;
 import com.cherry.cherrybookerbe.community.command.dto.response.CommunityThreadCommandResponse;
+import com.cherry.cherrybookerbe.notification.command.event.ThreadReplyCreatedEvent;
+import com.cherry.cherrybookerbe.user.command.repository.UserRepository;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+@Slf4j
 @Service
 @Transactional
 public class CommunityThreadCommandService {
 
     private final CommunityThreadRepository communityThreadRepository;
+    private final UserRepository userRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
-    public CommunityThreadCommandService(CommunityThreadRepository communityThreadRepository) {
+    public CommunityThreadCommandService(
+            CommunityThreadRepository communityThreadRepository,
+            UserRepository userRepository,
+            ApplicationEventPublisher eventPublisher) {
         this.communityThreadRepository = communityThreadRepository;
+        this.userRepository = userRepository;
+        this.eventPublisher = eventPublisher;
     }
 
     // ================== 최초 스레드 ==================
@@ -88,7 +100,28 @@ public class CommunityThreadCommandService {
         parent.addChild(reply);
         CommunityThread saved = communityThreadRepository.save(reply);
 
-        // 생성 직후 updatedAt == null -> updated = false
+        // ====== 알림용 이벤트 발행(추가) ======
+        CommunityThread root = findRoot(parent);
+        Integer ownerUserId = root.getUserId();
+
+        String writerNickname = userRepository.findById(userId)
+                .map(u -> u.getUserNickname())
+                .filter(s -> s != null && !s.isBlank())
+                .orElse("사용자" + userId);
+
+        // 자기 글에 자기 답글이면 보통 알림 제외(정책)
+        if (!ownerUserId.equals(userId)) {
+            ThreadReplyCreatedEvent ev = new ThreadReplyCreatedEvent(
+                    root.getId(),
+                    ownerUserId,
+                    userId,
+                    writerNickname
+            );
+            log.info("[COMMUNITY] publish ThreadReplyCreatedEvent={}", ev);
+            eventPublisher.publishEvent(ev);
+        }
+        // =====================================
+
         return new CommunityReplyCommandResponse(saved.getId(), saved.isUpdated(), saved.getUpdatedAt());
     }
 
@@ -115,5 +148,13 @@ public class CommunityThreadCommandService {
         }
 
         reply.markDeletedOnly();
+    }
+
+    private CommunityThread findRoot(CommunityThread node) {
+        CommunityThread cur = node;
+        while (cur.getParent() != null) {
+            cur = cur.getParent();
+        }
+        return cur;
     }
 }
