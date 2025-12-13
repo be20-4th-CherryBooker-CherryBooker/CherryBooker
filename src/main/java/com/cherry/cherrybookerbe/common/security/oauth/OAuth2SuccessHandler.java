@@ -72,8 +72,7 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
             // RefreshToken → Cookie 저장
             ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", refreshToken)
                     .httpOnly(true)
-                    .secure(false)      // 로컬 http 개발환경에서는 false
-                    .sameSite("Lax")
+                    .secure(true)
                     .path("/")
                     .sameSite("None")
                     .maxAge(14 * 24 * 60 * 60)

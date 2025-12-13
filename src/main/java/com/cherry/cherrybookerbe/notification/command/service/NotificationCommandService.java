@@ -21,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
@@ -33,7 +34,7 @@ import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
+@Transactional(transactionManager = "transactionManager")
 public class NotificationCommandService {
 
     private final NotificationRepository notificationRepository;
@@ -105,6 +106,17 @@ public class NotificationCommandService {
 
         Notification saved = notificationRepository.save(notification);
 
+        notificationRepository.flush();
+
+        if (saved.getId() == null) {
+            throw new ResponseStatusException(
+                    HttpStatus.INTERNAL_SERVER_ERROR,
+                    "알림 저장은 되었으나 PK(alarm_id)를 생성/조회하지 못했습니다. alarm_log PK/auto_increment 및 타입을 점검하세요."
+            );
+        }
+
+        long unreadAfterInsert = notificationRepository.countByUserIdAndReadFalse(request.getTargetUserId());
+
         // 발송 로그 기록
         NotificationSendLog logEntity = NotificationSendLog.builder()
                 .template(template)
@@ -114,19 +126,20 @@ public class NotificationCommandService {
                 .build();
         sendLogRepository.save(logEntity);
 
+        Integer nid = saved.getId();
+        LocalDateTime createdAt = saved.getCreatedAt();
+
         // 커밋 후 SSE 이벤트 (새 알림 + 미읽음 카운트)
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
             @Override
             public void afterCommit() {
-                long unread = notificationRepository.countByUserIdAndReadFalse(request.getTargetUserId());
-
                 eventPublisher.publishEvent(NotificationCreatedEvent.of(
                         request.getTargetUserId(),
-                        saved.getId(),
-                        saved.getTitle(),
-                        saved.getContent(),
-                        saved.getCreatedAt(),
-                        unread
+                        nid,
+                        mergedTitle,
+                        mergedBody,
+                        createdAt,
+                        unreadAfterInsert
                 ));
             }
         });
@@ -270,5 +283,26 @@ public class NotificationCommandService {
             merged = merged.replace(placeholder, Objects.toString(entry.getValue(), ""));
         }
         return merged;
+    }
+
+    @Transactional(transactionManager = "transactionManager", propagation = Propagation.REQUIRES_NEW)
+    public void notifyThreadReply(Integer targetUserId, Integer threadId, String writerNickname) {
+
+        NotificationTemplate template = templateRepository
+                .findByTypeAndDeletedFalse(NotificationTemplateType.EVENT_THREAD_REPLY)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.INTERNAL_SERVER_ERROR,
+                        "EVENT_THREAD_REPLY 템플릿이 없습니다."
+                ));
+
+        NotificationSendRequest req = NotificationSendRequest.builder()
+                .targetUserId(targetUserId)
+                .variables(Map.of(
+                        "writerNickname", writerNickname,
+                        "threadId", String.valueOf(threadId)
+                ))
+                .build();
+
+        sendByTemplate(template.getId(), req);
     }
 }
