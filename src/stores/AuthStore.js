@@ -71,16 +71,10 @@ export const useAuthStore = defineStore('auth', () => {
         try {
             const payload = jwtDecode(token);
 
-            // sub를 userId로 사용 (Number 변환)
-            const userId = payload.sub ? Number(payload.sub) : null;
-
             setUser({
-                userId,              // thread / 권한 체크용
-                id: userId,          // 혹시 id로 쓰는 곳도 대비
-                email: payload.email ?? null,
-                name: payload.name ?? null,
-                nickname: payload.nickname ?? null, // 있으면 사용
-                role: payload.role ?? null,
+                email: payload.email,
+                name: payload.name,
+                role: payload.role
             });
         } catch (e) {
             console.error('JWT 디코딩 실패:', e);
