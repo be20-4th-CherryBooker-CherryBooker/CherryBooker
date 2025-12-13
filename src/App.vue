@@ -3,9 +3,6 @@ import { computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { storeToRefs } from 'pinia'
 
-import { computed } from "vue";
-import { useRoute } from "vue-router";
-
 import NavigationBar from "@/components/NavigationBar.vue";
 import NotificationBell from "@/components/notification/NotificationBell.vue";
 import AlertIconSrc from '@/assets/icon/icon-headbar-alert.svg'
@@ -42,7 +39,6 @@ watch(
 
 import AdminNavBar from "@/components/AdminNavBar.vue";
 
-const route = useRoute();
 
 /** 현재 경로가 /admin 으로 시작하면 true */
 const isAdminPage = computed(() => route.path.startsWith("/admin"));

@@ -91,8 +91,6 @@ const routes = [
                 component: () => import('@/views/notification/AlarmSendCreate.vue'),
             },
         ],
-        name: "thread",
-        component: () => import("@/views/thread/ThreadView.vue"),
     },
     {
         path: "/admin/reports",
