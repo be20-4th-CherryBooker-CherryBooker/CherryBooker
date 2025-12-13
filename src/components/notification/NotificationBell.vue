@@ -452,9 +452,14 @@ const openNotification = async (item) => {
 }
 
 .col-body {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+
+  overflow-wrap: anywhere;
+  word-break: break-word;
+
+  min-width: 0;
 }
 
 /* 비어 있을 때: 가운데 배치 + 여유 공간 */
