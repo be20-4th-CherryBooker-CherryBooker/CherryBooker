@@ -23,10 +23,10 @@ export const useNotificationStore = defineStore('notification', () => {
     // =========================
     async function loadNotifications(page = 0, size = 10) {
         // 새로고침 직후 대비
-        if (!authStore.user && typeof authStore.loadFromStorage === 'function') {
+        if (!authStore.accessToken && typeof authStore.loadFromStorage === 'function') {
             authStore.loadFromStorage()
         }
-        if (!authStore.user) return
+        if (!authStore.accessToken) return
 
         const pageRes = await fetchMyNotifications({ page, size })
 
@@ -43,10 +43,10 @@ export const useNotificationStore = defineStore('notification', () => {
     // 2) 미읽음 개수 조회
     // =========================
     async function fetchUnreadCountAction() {
-        if (!authStore.user && typeof authStore.loadFromStorage === 'function') {
+        if (!authStore.accessToken && typeof authStore.loadFromStorage === 'function') {
             authStore.loadFromStorage()
         }
-        if (!authStore.user) return
+        if (!authStore.accessToken) return
 
         const cnt = await fetchMyUnreadCount()
         unreadCount.value = Number(cnt) || 0

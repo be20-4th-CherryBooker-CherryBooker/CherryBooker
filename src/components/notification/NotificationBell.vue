@@ -1,5 +1,6 @@
 <!-- src/components/notification/NotificationBell.vue -->
 <script setup>
+import { useRouter } from 'vue-router'
 import { computed, onMounted, ref } from 'vue'
 import { useAuthStore } from '@/stores/AuthStore'
 import {
@@ -12,6 +13,7 @@ import { useNotificationStore } from '@/stores/notificationStore.js'
 import { icons } from '@/assets/icon/icons.js' // 알림 아이콘 모음
 
 const authStore = useAuthStore()
+const router = useRouter()
 const notificationStore = useNotificationStore()
 
 const isNotificationOpen = ref(false)
@@ -132,6 +134,48 @@ const removeAllRead = async () => {
     console.error('[NotificationBell] 읽은 알림 전체 삭제 실패:', err)
   }
 }
+
+// "스레드 120" 같은 문장에서 id를 뽑아냄 (여러 패턴 방어)
+const extractThreadId = (text) => {
+  if (!text) return null
+
+  const patterns = [
+    /스레드\s*(\d+)/,                // "스레드 120"
+    /thread\s*#?\s*(\d+)/i,          // "thread 120", "thread #120"
+    /threadId\s*[:=]\s*(\d+)/i,      // "threadId=120" 형태
+  ]
+
+  for (const re of patterns) {
+    const m = String(text).match(re)
+    if (m?.[1]) return Number(m[1])
+  }
+  return null
+}
+
+// 알림 클릭 시: 읽음 처리 → 팝오버 닫기 → 이동
+const openNotification = async (item) => {
+  if (activeTab.value !== 'unread') return
+
+  try {
+    // unread 탭에서 클릭하면 읽음 처리까지 같이
+    if (!item.read) {
+      await markMyNotificationRead(item.id)
+      await reloadAfterChange()
+    }
+
+    closeNotification()
+
+    const threadId = extractThreadId(item.body) || extractThreadId(item.title)
+    if (threadId) {
+      router.push(`/thread/${threadId}`)
+    } else {
+      console.warn('[NotificationBell] threadId 파싱 실패:', item)
+    }
+  } catch (e) {
+    console.error('[NotificationBell] 알림 클릭 처리 실패:', e)
+  }
+}
+
 </script>
 
 <template>
@@ -221,6 +265,8 @@ const removeAllRead = async () => {
               v-for="(item, idx) in filteredNotifications"
               :key="item.id"
               class="list-row"
+              :class="{ clickable: activeTab === 'unread' }"
+              @click="activeTab === 'unread' && openNotification(item)"
           >
             <div class="col col-no">{{ idx + 1 }}</div>
             <div class="col col-title">{{ item.title }}</div>
@@ -232,7 +278,7 @@ const removeAllRead = async () => {
                   v-if="activeTab === 'unread'"
                   type="button"
                   class="pill-btn pill-btn--orange"
-                  @click="markAsRead(item.id)"
+                  @click.stop="markAsRead(item.id)"
               >
                 읽음
               </button>
@@ -240,7 +286,7 @@ const removeAllRead = async () => {
                   v-else
                   type="button"
                   class="pill-btn pill-btn--pink"
-                  @click="removeNotification(item.id)"
+                  @click.stop="removeNotification(item.id)"
               >
                 삭제
               </button>
@@ -258,6 +304,11 @@ const removeAllRead = async () => {
 </template>
 
 <style scoped>
+
+.list-row { cursor: default; }
+.list-row.clickable { cursor: pointer; }
+.list-row.clickable:hover { background: #fffaf0; }
+
 
 /* 뱃지 위치 */
 .notification-badge :deep(.el-badge__content) {
