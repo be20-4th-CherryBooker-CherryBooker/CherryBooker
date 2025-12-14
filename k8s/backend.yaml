@@ -68,18 +68,18 @@ spec:
                 name: backend-config
             - secretRef:
                 name: backend-secrets
-          readinessProbe:
-            httpGet:
-              path: /actuator/health/readiness
-              port: 8080
-            initialDelaySeconds: 30
-            periodSeconds: 10
-          livenessProbe:
-            httpGet:
-              path: /actuator/health/liveness
-              port: 8080
-            initialDelaySeconds: 60
-            periodSeconds: 20
+          #readinessProbe:
+            #httpGet:
+              #path: /actuator/health/readiness
+              #port: 8080
+            #initialDelaySeconds: 30
+            #periodSeconds: 10
+          #livenessProbe:
+            #httpGet:
+              #path: /actuator/health/liveness
+              #port: 8080
+            #initialDelaySeconds: 60
+            #periodSeconds: 20
           resources:
             requests:
               cpu: 250m
