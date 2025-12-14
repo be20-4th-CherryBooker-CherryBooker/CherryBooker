@@ -30,14 +30,21 @@ const currentIcon = computed(() =>
 
 // store.notifications -> UI용
 const uiNotifications = computed(() =>
-    notificationStore.notifications.map((n) => ({
-      id: n.id,
-      title: n.title,
-      body: n.body,
-      read: n.read,
-      createdAt: n.createdAt,
-    })),
+    notificationStore.notifications.map((n) => {
+      const threadId =
+          extractThreadId(n.body) || extractThreadId(n.title)
+
+      return {
+        id: n.id,
+        title: n.title,
+        body: n.body,
+        read: n.read,
+        createdAt: n.createdAt,
+        threadId,
+      }
+    }),
 )
+
 
 // 탭별 필터
 const filteredNotifications = computed(() => {
@@ -136,21 +143,25 @@ const removeAllRead = async () => {
 }
 
 // "스레드 120" 같은 문장에서 id를 뽑아냄 (여러 패턴 방어)
-const extractThreadId = (text) => {
+function extractThreadId(text) {
   if (!text) return null
 
   const patterns = [
-    /스레드\s*(\d+)/,                // "스레드 120"
-    /thread\s*#?\s*(\d+)/i,          // "thread 120", "thread #120"
-    /threadId\s*[:=]\s*(\d+)/i,      // "threadId=120" 형태
+    /스레드\s*(\d+)/,
+    /thread\s*#?\s*(\d+)/i,
+    /threadId\s*[:=]\s*(\d+)/i,
   ]
 
   for (const re of patterns) {
     const m = String(text).match(re)
-    if (m?.[1]) return Number(m[1])
+    if (m?.[1]) {
+      const id = Number(m[1])
+      return Number.isFinite(id) ? id : null
+    }
   }
   return null
 }
+
 
 // 알림 클릭 시: 읽음 처리 → 팝오버 닫기 → 이동
 const openNotification = async (item) => {
@@ -175,6 +186,8 @@ const openNotification = async (item) => {
     console.error('[NotificationBell] 알림 클릭 처리 실패:', e)
   }
 }
+
+const isLinkable = (item) => !!item?.threadId
 
 </script>
 
@@ -265,10 +278,11 @@ const openNotification = async (item) => {
               v-for="(item, idx) in filteredNotifications"
               :key="item.id"
               class="list-row"
-              :class="{ clickable: activeTab === 'unread' }"
-              @click="activeTab === 'unread' && openNotification(item)"
+              :class="{ clickable: isLinkable(item) }"
+              @click="isLinkable(item) && openNotification(item)"
           >
-            <div class="col col-no">{{ idx + 1 }}</div>
+
+          <div class="col col-no">{{ idx + 1 }}</div>
             <div class="col col-title">{{ item.title }}</div>
             <div class="col col-body">
               {{ item.body }}
