@@ -16,14 +16,14 @@
     </div>
 
     <div class="nav-item"
-         :class="{ active: isActive('/admin/notifications/send-logs') }"
-         @click="goTo('/admin/notifications/send-logs')">
+         :class="{ active: isActive('/admin/alarms') }"
+         @click="goTo('/admin/alarms')">
       <img src="/images/bell.svg" alt="logs"/>
     </div>
 
     <div class="nav-item"
-         :class="{ active: isActive('/admin/notifications/templates') }"
-         @click="goTo('/admin/notifications/templates')">
+         :class="{ active: isActive('/admin/alarms/send') }"
+         @click="goTo('/admin/alarms/send')">
       <img src="/images/megaphone.svg" alt="templates"  />
     </div>
 
