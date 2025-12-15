@@ -1,5 +1,6 @@
 ### Basic SW Arhitecture for this project
-<img width="1331" height="918" alt="image" src="https://github.com/user-attachments/assets/ccb8a715-580f-4c4b-ba0e-78e06c66c39e" />
+![Uploading image.png…]()
+
 
 
 ### How to clone submodules recursively
