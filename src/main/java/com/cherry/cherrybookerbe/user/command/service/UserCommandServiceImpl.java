@@ -27,4 +27,17 @@ public class UserCommandServiceImpl implements UserCommandService {
 
         user.updateNickName(request.getNickname());
     }
+
+    @Transactional
+    @Override
+    public void deleteUser(Integer userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("유저를 찾을 수 없습니다. ID: " + userId));
+
+        if (user.getUserStatus() == UserStatus.DELETE) {
+            throw new IllegalArgumentException("이미 탈퇴 처리된 회원입니다.");
+        }
+
+        user.softDelete();
+    }
 }

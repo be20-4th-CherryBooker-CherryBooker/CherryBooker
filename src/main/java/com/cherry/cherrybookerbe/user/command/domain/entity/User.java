@@ -71,4 +71,16 @@ public class User extends BaseTimeEntity {
     public void updateNickName(String newNickName){
         this.userNickname = newNickName;
     }
+
+    //회원 탈퇴
+    // User.java
+
+    public void softDelete() {
+        // 이미 탈퇴 처리된 경우 중복 처리 방지
+        if (this.userStatus == UserStatus.DELETE) {
+            return;
+        }
+        this.userStatus = UserStatus.DELETE;
+    }
+
 }
