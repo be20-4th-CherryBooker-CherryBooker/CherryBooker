@@ -87,7 +87,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/AuthStore'
-import { getMyProfileApi, updateNicknameApi, withdrawApi } from '@/api/UserApi'
+import { getMyProfileApi, updateNicknameApi } from '@/api/UserApi'
 import { logoutApi } from '@/api/AuthApi'
 
 const authStore = useAuthStore()
@@ -98,13 +98,13 @@ const loading = ref(false)
 const error = ref(null)
 const isEditingNickname = ref(false)
 const savingNickname = ref(false)
-const withdrawing = ref(false)
 
 const originalNickname = ref('')
 const nickname = ref('')
 const email = ref('-')
 const joinDate = ref('-')
 
+// 사용자 정보 로드
 const loadUserInfo = async () => {
   loading.value = true
   error.value = null
@@ -112,26 +112,15 @@ const loadUserInfo = async () => {
   try {
     console.log('📋 프로필 정보 조회 시작')
 
-    const res = await getMyProfileApi()
-    const api = res?.data
-    const userData = api?.data
-
-    if (!api?.success) {
-      throw new Error(api?.message || '사용자 정보를 불러오는데 실패했습니다.')
-    }
-
-    if (!userData) {
-      throw new Error('프로필 데이터가 비어 있습니다.')
-    }
+    const response = await getMyProfileApi()
+    const userData = response.data
 
     console.log('✅ 프로필 정보 로드 성공:', userData)
 
-    // 데이터 설정
     nickname.value = userData.nickname || ''
     originalNickname.value = nickname.value
     email.value = userData.email || '-'
 
-    // 가입일
     if (userData.createdAt) {
       const date = new Date(userData.createdAt)
       joinDate.value = date.toLocaleDateString('ko-KR', {
@@ -139,11 +128,8 @@ const loadUserInfo = async () => {
         month: '2-digit',
         day: '2-digit'
       }).replace(/\. /g, '.').replace(/\.$/, '')
-    } else {
-      joinDate.value = '-'
     }
 
-    // AuthStore 업데이트
     if (authStore.user) {
       authStore.user.nickname = userData.nickname
       authStore.user.email = userData.email
@@ -152,9 +138,7 @@ const loadUserInfo = async () => {
   } catch (e) {
     console.error('❌ 프로필 정보 로드 실패:', e)
     const errorMessage =
-        e?.response?.data?.message ||
-        e?.message ||
-        '사용자 정보를 불러오는데 실패했습니다.'
+        e.response?.data?.message || '사용자 정보를 불러오는데 실패했습니다.'
     error.value = errorMessage
   } finally {
     loading.value = false
@@ -191,29 +175,17 @@ const saveNickname = async () => {
 
   try {
     console.log('📝 닉네임 수정 요청:', trimmedNickname)
-
-    const res = await updateNicknameApi(trimmedNickname)
-    const api = res?.data
-
-    if (!api?.success) {
-      throw new Error(api?.message || '닉네임 수정에 실패했습니다.')
-    }
-
+    await updateNicknameApi(trimmedNickname)
     console.log('✅ 닉네임 수정 성공')
 
     await loadUserInfo()
     isEditingNickname.value = false
-
     alert('닉네임이 수정되었습니다.')
   } catch (e) {
     console.error('❌ 닉네임 수정 실패:', e)
     const errorMessage =
-        e?.response?.data?.message ||
-        e?.message ||
-        '닉네임 수정에 실패했습니다.'
+        e.response?.data?.message || '닉네임 수정에 실패했습니다.'
     alert(errorMessage)
-
-    // 원래 닉네임으로 복구
     nickname.value = originalNickname.value
   } finally {
     savingNickname.value = false
@@ -230,7 +202,6 @@ const handleLogout = async () => {
     console.log('✅ 로그아웃 성공')
   } catch (e) {
     console.error('❌ 로그아웃 실패:', e)
-    // 실패해도 클라이언트에서는 로그아웃 처리
   } finally {
     authStore.clearAuthState()
     router.push({ name: 'login' })
@@ -238,6 +209,7 @@ const handleLogout = async () => {
 }
 
 // 회원탈퇴
+// 회원탈퇴(소프트 삭제)
 const handleWithdraw = async () => {
   if (withdrawing.value) return
 
@@ -275,7 +247,6 @@ const handleWithdraw = async () => {
   }
 }
 
-// 마운트 시 사용자 정보 로드
 onMounted(() => {
   loadUserInfo()
 })
