@@ -34,7 +34,7 @@ export const updateNicknameApi = async (nickname) => {
  * 회원 탈퇴
  * @returns {Promise}
  */
-export const deleteUserApi = async () => {
+export const withdrawApi = async () => {
     const response = await api.delete('/api/users/user');
     return response.data;
 };

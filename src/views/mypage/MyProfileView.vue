@@ -87,7 +87,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/AuthStore'
-import { getMyProfileApi, updateNicknameApi } from '@/api/UserApi'
+import { getMyProfileApi, updateNicknameApi, withdrawApi } from '@/api/UserApi'
 import { logoutApi } from '@/api/AuthApi'
 
 const authStore = useAuthStore()
@@ -98,11 +98,12 @@ const loading = ref(false)
 const error = ref(null)
 const isEditingNickname = ref(false)
 const savingNickname = ref(false)
+const withdrawing = ref(false)
+
 const originalNickname = ref('')
 const nickname = ref('')
 const email = ref('-')
 const joinDate = ref('-')
-
 
 const loadUserInfo = async () => {
   loading.value = true
@@ -111,8 +112,17 @@ const loadUserInfo = async () => {
   try {
     console.log('📋 프로필 정보 조회 시작')
 
-    const response = await getMyProfileApi()
-    const userData = response.data
+    const res = await getMyProfileApi()
+    const api = res?.data
+    const userData = api?.data
+
+    if (!api?.success) {
+      throw new Error(api?.message || '사용자 정보를 불러오는데 실패했습니다.')
+    }
+
+    if (!userData) {
+      throw new Error('프로필 데이터가 비어 있습니다.')
+    }
 
     console.log('✅ 프로필 정보 로드 성공:', userData)
 
@@ -129,6 +139,8 @@ const loadUserInfo = async () => {
         month: '2-digit',
         day: '2-digit'
       }).replace(/\. /g, '.').replace(/\.$/, '')
+    } else {
+      joinDate.value = '-'
     }
 
     // AuthStore 업데이트
@@ -137,10 +149,12 @@ const loadUserInfo = async () => {
       authStore.user.email = userData.email
       authStore.user.createdAt = userData.createdAt
     }
-
   } catch (e) {
     console.error('❌ 프로필 정보 로드 실패:', e)
-    const errorMessage = e.response?.data?.message || '사용자 정보를 불러오는데 실패했습니다.'
+    const errorMessage =
+        e?.response?.data?.message ||
+        e?.message ||
+        '사용자 정보를 불러오는데 실패했습니다.'
     error.value = errorMessage
   } finally {
     loading.value = false
@@ -178,19 +192,25 @@ const saveNickname = async () => {
   try {
     console.log('📝 닉네임 수정 요청:', trimmedNickname)
 
-    await updateNicknameApi(trimmedNickname)
+    const res = await updateNicknameApi(trimmedNickname)
+    const api = res?.data
+
+    if (!api?.success) {
+      throw new Error(api?.message || '닉네임 수정에 실패했습니다.')
+    }
 
     console.log('✅ 닉네임 수정 성공')
 
     await loadUserInfo()
-
     isEditingNickname.value = false
 
     alert('닉네임이 수정되었습니다.')
   } catch (e) {
     console.error('❌ 닉네임 수정 실패:', e)
-
-    const errorMessage = e.response?.data?.message || '닉네임 수정에 실패했습니다.'
+    const errorMessage =
+        e?.response?.data?.message ||
+        e?.message ||
+        '닉네임 수정에 실패했습니다.'
     alert(errorMessage)
 
     // 원래 닉네임으로 복구
@@ -213,17 +233,45 @@ const handleLogout = async () => {
     // 실패해도 클라이언트에서는 로그아웃 처리
   } finally {
     authStore.clearAuthState()
-
-    // 로그인 페이지로 강제 이동
-    router.push({ name: 'login' }) // 또는 path: '/login'
+    router.push({ name: 'login' })
   }
 }
 
 // 회원탈퇴
-const handleWithdraw = () => {
-  if (confirm('정말 회원탈퇴 하시겠습니까?\n탈퇴 후에는 계정을 복구할 수 없습니다.')) {
-    // TODO: 회원탈퇴 API 연동
-    alert('회원탈퇴 기능은 준비 중입니다.')
+const handleWithdraw = async () => {
+  if (withdrawing.value) return
+
+  const ok = confirm('정말 회원탈퇴 하시겠습니까?\n탈퇴 후에는 계정을 복구할 수 없습니다.')
+  if (!ok) return
+
+  withdrawing.value = true
+
+  try {
+    console.log('🧾 회원탈퇴 요청')
+
+    const res = await withdrawApi()
+    const api = res?.data
+
+    if (!api?.success) {
+      throw new Error(api?.message || '회원탈퇴에 실패했습니다.')
+    }
+
+    console.log('✅ 회원탈퇴 성공')
+
+    // 서버에서 토큰 무효화/쿠키 삭제 여부와 상관없이 클라이언트는 즉시 초기화
+    authStore.clearAuthState()
+    alert('회원탈퇴가 완료되었습니다.')
+
+    router.push({ name: 'login' })
+  } catch (e) {
+    console.error('❌ 회원탈퇴 실패:', e)
+    const errorMessage =
+        e?.response?.data?.message ||
+        e?.message ||
+        '회원탈퇴에 실패했습니다.'
+    alert(errorMessage)
+  } finally {
+    withdrawing.value = false
   }
 }
 
