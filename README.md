@@ -130,10 +130,8 @@ OCR 기술을 통해 텍스트가 자동으로 추출·저장되며,
 ---
 
 ## 🛜 프로젝트 아키텍처
+- k8s 폴더에서 kubernetes manifest yaml 파일 확인 가능
 <img width="770" height="600" alt="image" src="https://github.com/user-attachments/assets/11abac75-ddcf-47f7-9592-0802a5333db0" />
-
-### 🐋 Kubernetes manifest
-링크: 본 repository의 k8s 확인
 
 ## 🐋 Docker 및 Kubernetes 시연
 ![kubernetes_docker](https://github.com/user-attachments/assets/0c9c8804-769d-42ff-8fde-ba16740dfaa9)
@@ -161,6 +159,7 @@ OCR 기술을 통해 텍스트가 자동으로 추출·저장되며,
 ## 🔁 Kubernetes Service 로드밸런싱 검증 (Round-Robin)
 ![kubernetes_docker2](https://github.com/user-attachments/assets/7bcb8da8-e123-47d0-83ae-e7fa6ff1e4b9)
 - Kubernetes Service가 다중 Pod 환경에서 요청을 Round-Robin 방식으로 분산 처리하는지 확인하기 위해 간단한 부하 테스트를 진행
+
 ### 🧪 테스트 환경
 - Backend Pod Replica: 2개
 - Kubernetes Service: ClusterIP
