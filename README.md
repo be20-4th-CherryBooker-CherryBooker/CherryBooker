@@ -125,42 +125,45 @@ OCR 기술을 통해 텍스트가 자동으로 추출·저장되며,
 
 ---
 
-## 💻 시스템 아키텍쳐
+## 🛜 프로젝트 아키텍처
+<img width="887" height="620" alt="image" src="https://github.com/user-attachments/assets/0c59f176-a542-4e36-b8c5-42ae9cca8738" />
 
 
-## 🐋 CI/CD 계획
+## 🐋 CI/CD 시연
+![kubernetes_docker](https://github.com/user-attachments/assets/0c9c8804-769d-42ff-8fde-ba16740dfaa9)
+
+## 🔁 Kubernetes Service 로드밸런싱 검증 (Round-Robin)
+![kubernetes_docker2](https://github.com/user-attachments/assets/7bcb8da8-e123-47d0-83ae-e7fa6ff1e4b9)
+- Kubernetes Service가 다중 Pod 환경에서 요청을 Round-Robin 방식으로 분산 처리하는지 확인하기 위해 간단한 부하 테스트를 진행
+### 🧪 테스트 환경
+- Backend Pod Replica: 2개
+- Kubernetes Service: ClusterIP
+- 테스트 도구: hey
+- 대상 Endpoint: ```/actuator/health```
+
+### 🚀 부하 테스트 명령어
+```
+hey -z 100s -c 50 http://localhost:8080/actuator/health
+```
+- -z 100s : 100초 동안 요청 지속
+- -c 50 : 동시 요청 50개
+
+### 🔍 검증 방법
+- 부하 테스트 실행 중 kubectl logs를 통해 각 요청을 처리한 Pod replica ID를 확인
+```
+kubectl logs -l app=cherry-booker --follow
+```
+
+### ✅ 테스트 결과
+- 동일한 Backend API Endpoint에 대한 요청이
+- 두 개의 Pod로 거의 균등하게 분산
+- 요청 로그 상에서 Pod replica ID가 번갈아 출력됨을 확인
+- 이를 통해 Kubernetes Service가 다중 Pod 환경에서 Round-Robin 기반 로드밸런싱을 정상적으로 수행함을 검증
 
 
-## ✅ 기능 수행 테스트 결과
-<details>
-     <summary><b>1️⃣ 회원</b></summary>
-   
-</details>
+## 🚩 젠킨스 동작 테스트
+![cicd](https://github.com/user-attachments/assets/172f94e4-3896-4b32-a2e1-a491e10aba91)
 
-<details>
-     <summary><b>2️⃣ 서재관리</b></summary>
-   
-</details>
 
-<details>
-     <summary><b>3️⃣ 글귀</b></summary>
-     - 글귀 추출 (OCR 텍스트 추출)<br>
-     - 구글 로그인<br>
-  ![Image](https://github.com/user-attachments/assets/e7f5e196-9fc2-4a84-aaba-e3ce22eca34e)
-   
-</details>
 
-<details>
-     <summary><b>4️⃣ 커뮤니티</b></summary>
-   
-</details>
-
-<details>
-     <summary><b>5️⃣ 신고</b></summary>
-   
-</details>
-
-<details>
-     <summary><b>6️⃣ 알림</b></summary>
-   
-</details>
+## 🍪 개인 회고록
