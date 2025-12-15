@@ -99,41 +99,41 @@ OCR 기술을 통해 텍스트가 자동으로 추출·저장되며,
 	<h4>스레드 목록 조회</h4>
 	<img src="./product/gif/스레드목록조회.gif" width="80%"/>
 	<h4>스레드 등록</h4>
-	<img src="./CherryBooker-PT/product/gif/스레드등록.gif" width="80%"/>
+	<img src="./product/gif/스레드등록.gif" width="80%"/>
 	<h4>스레드 상세 조회</h4>
-	<img src="./CherryBooker-PT/product/gif/스레드상세조회.gif" width="80%"/>
+	<img src="./product/gif/스레드상세조회.gif" width="80%"/>
 	<h4>스레드 답글 등록</h4>
-	<img src="./CherryBooker-PT/product/gif/스레드답글등록.gif" width="80%"/>
+	<img src="./product/gif/스레드답글등록.gif" width="80%"/>
 	<h4>스레드 답글 수정</h4>
-	<img src="./CherryBooker-PT/product/gif/스레드답글수정.gif" width="80%"/>
+	<img src="./product/gif/스레드답글수정.gif" width="80%"/>
 	<h4>스레드 답글 삭제</h4>
-	<img src="./CherryBooker-PT/product/gif/스레드답글삭제.gif" width="80%"/>
+	<img src="./product/gif/스레드답글삭제.gif" width="80%"/>
 	<h4>스레드 삭제</h4>
-	<img src="./CherryBooker-PT/product/gif/스레드삭제.gif" width="80%"/>
+	<img src="./product/gif/스레드삭제.gif" width="80%"/>
 </details>
 
 <details> 
 	<summary><b>🔔 알림</b></summary> 
 	<h4>알림 템플릿 목록 조회</h4>
-	<img src="./CherryBooker-PT/product/gif/알림템플릿목록조회.gif" width="80%"/>
+	<img src="./product/gif/알림템플릿목록조회.gif" width="80%"/>
 	<h4>알림 템플릿 검색</h4>
-	<img src="./CherryBooker-PT/product/gif/알림템플릿검색.gif" width="80%"/>
+	<img src="./product/gif/알림템플릿검색.gif" width="80%"/>
 	<h4>알림 템플릿 상세 조회</h4>
-	<img src="./CherryBooker-PT/product/gif/알림템플릿상세조회.gif" width="80%"/>
+	<img src="./product/gif/알림템플릿상세조회.gif" width="80%"/>
 	<h4>알림 템플릿 등록</h4>
-	<img src="./CherryBooker-PT/gif/알림템플릿등록.gif" width="80%"/>
+	<img src="./product/gif/알림템플릿등록.gif" width="80%"/>
 	<h4>알림 템플릿 수정</h4>
-	<img src="./CherryBooker-PT/product/gif/알림템플릿수정.gif" width="80%"/>
+	<img src="./product/gif/알림템플릿수정.gif" width="80%"/>
 	<h4>알림 템플릿 삭제</h4>
-	<img src="./CherryBooker-PT/product/gif/알림템플릿삭제.gif" width="80%"/>
+	<img src="./product/gif/알림템플릿삭제.gif" width="80%"/>
 	<h4>알림 로그 검색</h4>
-	<img src="./CherryBooker-PT/product/gif/알림로그검색.png" width="80%"/>
+	<img src="./product/gif/알림로그검색.png" width="80%"/>
 	<h4>알림 발송</h4>
-	<img src="./CherryBooker-PT/product/gif/알림발송.gif" width="80%"/>
+	<img src="./product/gif/알림발송.gif" width="80%"/>
 	<h4>알림함</h4>
-	<img src="./CherryBooker-PT/product/gif/알림함.gif" width="80%"/>
+	<img src="./product/gif/알림함.gif" width="80%"/>
 	<h4>스레드 답글 알림</h4>
-	<img src="./CherryBooker-PT/product/gif/스레드답글알림.gif" width="80%"/>
+	<img src="./product/gif/스레드답글알림.gif" width="80%"/>
 </details>
 
 <details> 
