@@ -134,7 +134,8 @@ OCR 기술을 통해 텍스트가 자동으로 추출·저장되며,
 <img width="770" height="600" alt="image" src="https://github.com/user-attachments/assets/11abac75-ddcf-47f7-9592-0802a5333db0" />
 
 ## 🐋 Docker 및 Kubernetes 시연
-![kubernetes_docker](https://github.com/user-attachments/assets/0c9c8804-769d-42ff-8fde-ba16740dfaa9)
+![docker-kubernetes_시연_영상 (1)](https://github.com/user-attachments/assets/cf04a570-ab8a-48d7-af2f-8832dec7b4f1)
+
 - 프로젝트에서는 Docker 및 Kubernetes 환경에서 애플리케이션이 정상적으로 배포·동작하는 과정을 단계별로 시연
 ### 🔧 시연 흐름
 
@@ -157,7 +158,7 @@ OCR 기술을 통해 텍스트가 자동으로 추출·저장되며,
 - 로컬 환경에서 포트 포워딩을 통해 서비스 동작을 직접 검증
 
 ## 🔁 Kubernetes Service 로드밸런싱 검증 (Round-Robin)
-![kubernetes_docker2](https://github.com/user-attachments/assets/7bcb8da8-e123-47d0-83ae-e7fa6ff1e4b9)
+![kuberneteds pods being round-robin (2)](https://github.com/user-attachments/assets/8b572b70-ad00-4c13-aee3-e9125b58815c)
 - Kubernetes Service가 다중 Pod 환경에서 요청을 Round-Robin 방식으로 분산 처리하는지 확인하기 위해 간단한 부하 테스트를 진행
 
 ### 🧪 테스트 환경
