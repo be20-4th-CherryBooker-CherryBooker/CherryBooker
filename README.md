@@ -97,7 +97,7 @@ OCR 기술을 통해 텍스트가 자동으로 추출·저장되며,
 <details> 
     <summary><b>💬 글귀 스레드</b></summary>
 	<h4>스레드 목록 조회</h4>
-	<img src="./CherryBooker-PT/product/gif/스레드목록조회.gif" width="80%"/>
+	<img src="./product/gif/스레드목록조회.gif" width="80%"/>
 	<h4>스레드 등록</h4>
 	<img src="./CherryBooker-PT/product/gif/스레드등록.gif" width="80%"/>
 	<h4>스레드 상세 조회</h4>
