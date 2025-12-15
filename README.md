@@ -125,6 +125,10 @@ OCR 기술을 통해 텍스트가 자동으로 추출·저장되며,
 	<img src="./ad-hell-client/product/gif/예약알림발송.gif" width="80%"/>
 	<h4>알림함</h4>
 	<img src="./ad-hell-client/product/gif/알림함.gif" width="80%"/>
+	<h4>신고처리</h4>
+	<img src="![신고처리](https://github.com/user-attachments/assets/a05f220c-5946-44c1-a63d-933a78d77d9b)" width="80%"/>
+	<h4>신고목록및 필터링</h4>
+	<img src="" ![신고목록필터링](https://github.com/user-attachments/assets/30f1f60e-4cbb-48e0-8f48-7a10a9d51c07)" width="80%"/>
 </details>
 
 ---
