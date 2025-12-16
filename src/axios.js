@@ -16,9 +16,8 @@ api.interceptors.request.use(
         // 인증이 필요 없는 요청 (로그인, OAuth 등)
         const publicEndpoints = [
             '/oauth2/authorization',
-            '/auth/admin/login',
+            '/admin/login',
             '/auth/refresh',
-            '/auth/logout',
         ];
 
         const isPublicEndpoint = publicEndpoints.some((endpoint) =>

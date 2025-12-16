@@ -1,8 +1,8 @@
 <template>
   <nav class="admin-nav">
 
-    <div class="nav-item">
-      <img src="/images/user.svg" alt="user" />
+    <div class="nav-item" @click="onLogout">
+      <img src="/images/logout_button.svg" alt="logout" />
     </div>
 
     <div class="nav-item"
@@ -30,15 +30,21 @@
   </nav>
 </template>
 
-
 <script setup>
 import { useRoute, useRouter } from "vue-router";
+import { useAuthStore } from "@/stores/AuthStore";
 
 const router = useRouter();
 const route = useRoute();
+const authStore = useAuthStore();
 
 const goTo = (p) => router.push(p);
 const isActive = (p) => route.path.startsWith(p);
+
+// 로그아웃 버튼 핸들러
+const onLogout = () => {
+  authStore.logout();
+};
 </script>
 
 <style scoped>

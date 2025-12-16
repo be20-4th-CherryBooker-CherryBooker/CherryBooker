@@ -136,6 +136,7 @@ export const useAuthStore = defineStore('auth', () => {
 
         localStorage.removeItem('accessToken');
         localStorage.removeItem('user');
+        localStorage.removeItem('refreshToken');
     };
 
     const handleOAuth2Success = (token) => {
@@ -215,13 +216,16 @@ export const useAuthStore = defineStore('auth', () => {
     };
 
     const logout = async () => {
+        const ok = window.confirm('로그아웃 하시겠습니까?');
+        if (!ok) return;
+
         try {
-            await logoutApi();
+            await logoutApi(); // /admin/logout (Authorization 자동 포함)
         } catch (error) {
             console.error('로그아웃 요청 실패:', error);
         } finally {
             clearAuthState();
-            router.push('/login');
+            router.replace('/login'); // ✅ push 대신 replace 권장
         }
     };
 
