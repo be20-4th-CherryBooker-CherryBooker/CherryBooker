@@ -1,0 +1,18 @@
+{
+  "content": [
+    {
+      "commentId": 101,
+      "threadId": 1,
+      "userName": "지훈",
+      "content": "달까지 가자 읽으면서 스스로를 지키는 일이 항상 가장 어렵다는 걸 깨달았습니다.",
+      "createdAt": "2025-02-01 15:20"
+    },
+    {
+      "commentId": 102,
+      "threadId": 1,
+      "userName": "민재",
+      "content": "죽고 싶지만 떡볶이는 먹고 싶어, 제목만큼이나 솔직한 문장들이 많네요.",
+      "createdAt": "2025-02-01 16:02"
+    }
+  ]
+}

@@ -1,0 +1,185 @@
+{
+  "content" : [
+    {
+      "quoteId": 1,
+      "bookTitle": "아몬드",
+      "author": "손원평",
+      "content": "감정이 없다는 것은 슬픔을 모른다는 뜻이 아니었다."
+    },
+    {
+      "quoteId": 2,
+      "bookTitle": "달까지 가자",
+      "author": "장류진",
+      "content": "스스로를 지키는 일은 언제나 가장 늦게 배운다."
+    },
+    {
+      "quoteId": 3,
+      "bookTitle": "죽고 싶지만 떡볶이는 먹고 싶어",
+      "author": "백세희",
+      "content": "오늘을 버티는 나에게 내일의 내가 고마워할 것이다."
+    },
+    {
+      "quoteId": 4,
+      "bookTitle": "해리포터와 비밀의 방",
+      "author": "J.K. 롤링",
+      "content": "우리의 선택이 우리를 만든다."
+    },
+    {
+      "quoteId": 5,
+      "bookTitle": "종이여자",
+      "author": "기욤 뮈소",
+      "content": "사랑은 때로 현실보다 더 현실 같았다."
+    },
+    {
+      "quoteId": 6,
+      "bookTitle": "모든 순간이 너였다",
+      "author": "하태완",
+      "content": "사람을 바꾸는 건 위로가 아니라 이해였다."
+    },
+    {
+      "quoteId": 7,
+      "bookTitle": "미드나잇 라이브러리",
+      "author": "매트 헤이그",
+      "content": "모든 삶은 선택의 결과다. 그리고 선택은 다시 바뀔 수 있다."
+    },
+    {
+      "quoteId": 8,
+      "bookTitle": "멋진 신세계",
+      "author": "올더스 헉슬리",
+      "content": "안락함이 진실을 대신할 수는 없다."
+    },
+    {
+      "quoteId": 9,
+      "bookTitle": "호밀밭의 파수꾼",
+      "author": "J.D. 샐린저",
+      "content": "어린 시절은 돌아오지 않지만, 그리움은 여전히 남아 있다."
+    },
+    {
+      "quoteId": 10,
+      "bookTitle": "어린왕자",
+      "author": "생텍쥐페리",
+      "content": "가장 중요한 것은 눈에 보이지 않는다."
+    },
+    {
+      "quoteId": 11,
+      "bookTitle": "꽃을 보듯 너를 본다",
+      "author": "나태주",
+      "content": "사람은 사람을 보고 사랑을 배운다."
+    },
+    {
+      "quoteId": 12,
+      "bookTitle": "작은 아씨들",
+      "author": "루이자 메이 올컷",
+      "content": "작은 선택들이 큰 삶을 만든다."
+    },
+    {
+      "quoteId": 13,
+      "bookTitle": "데미안",
+      "author": "헤르만 헤세",
+      "content": "새는 알에서 나오려고 투쟁한다."
+    },
+    {
+      "quoteId": 14,
+      "bookTitle": "죄와 벌",
+      "author": "도스토예프스키",
+      "content": "고통 속에서 성장하는 자만이 진정한 자유를 얻는다."
+    },
+    {
+      "quoteId": 15,
+      "bookTitle": "백년의 고독",
+      "author": "가브리엘 가르시아 마르케스",
+      "content": "고독은 인간이 가장 오래 지니는 감정이다."
+    },
+    {
+      "quoteId": 16,
+      "bookTitle": "해리포터와 아즈카반의 죄수",
+      "author": "J.K. 롤링",
+      "content": "두려움은 극복될 때 비로소 의미가 있다."
+    },
+    {
+      "quoteId": 17,
+      "bookTitle": "우리가 빛의 속도로 갈 수 없다면",
+      "author": "김초엽",
+      "content": "사랑은 타인과의 거리를 이해하는 일이다."
+    },
+    {
+      "quoteId": 18,
+      "bookTitle": "나미야 잡화점의 기적",
+      "author": "히가시노 게이고",
+      "content": "정답은 늘 마음 속에 있다."
+    },
+    {
+      "quoteId": 19,
+      "bookTitle": "채식주의자",
+      "author": "한강",
+      "content": "삶이란 결국 마음의 모양을 닮는다."
+    },
+    {
+      "quoteId": 20,
+      "quoteId": 20,
+      "bookTitle": "부드러운밤",
+      "author": "프랜시스 스콧 피츠제럴드",
+      "content": "사람은 사랑 때문에 부서지지만 사랑 때문에 다시 일어선다."
+    },
+    {
+      "quoteId": 21,
+      "bookTitle": "7년의 밤",
+      "author": "정유정",
+      "content": "진실은 때때로 상처를 남긴다."
+    },
+    {
+      "quoteId": 22,
+      "bookTitle": "문학소녀",
+      "author": "노미 유미",
+      "content": "책 속에서 길을 잃는 순간, 새로운 세상을 발견한다."
+    },
+    {
+      "quoteId": 23,
+      "bookTitle": "소설가의 일",
+      "author": "김영하",
+      "content": "삶을 기록하는 일은 결국 나를 이해하는 과정이다."
+    },
+    {
+      "quoteId": 24,
+      "bookTitle": "아가미",
+      "author": "구병모",
+      "content": "진심은 작은 파동이라도 반드시 전달된다."
+    },
+    {
+      "quoteId": 25,
+      "bookTitle": "페인트",
+      "author": "이희영",
+      "content": "상처는 사람을 가르치고, 사람은 다시 누군가를 위로한다."
+    },
+    {
+      "quoteId": 26,
+      "bookTitle": "마당이 있는 집",
+      "author": "김진영",
+      "content": "모든 집은 비밀을 품고 있다."
+    },
+    {
+      "quoteId": 27,
+      "bookTitle": "미 비포 유",
+      "author": "조조 모예스",
+      "content": "사랑은 때로 세상을 다시 보게 만든다."
+    },
+    {
+      "quoteId": 28,
+      "bookTitle": "시간을 파는 상점",
+      "author": "김선영",
+      "content": "시간의 가치는 잃어버린 뒤에야 깨닫는다."
+    },
+    {
+      "quoteId": 29,
+      "bookTitle": "미녀와 야수",
+      "author": "발몽",
+      "content": "진정한 아름다움은 눈에 보이지 않는다."
+    },
+    {
+      "quoteId": 30,
+      "bookTitle": "셜록 홈즈",
+      "author": "아서 코난 도일",
+      "content": "모든 단서는 결국 진실에 닿는다."
+    }
+  ]
+}
