@@ -144,10 +144,9 @@ OCR 기술을 통해 텍스트가 자동으로 추출·저장되며,
 	<h4>신고처리</h4>
 	<img src= "![신고처리](https://github.com/user-attachments/assets/a5e37a2a-4edf-40ec-8608-d41fc8eee749)" width="80%"/>
 	<h4>신고처리 목록 필터링</h4>
-	<img src="![신고목록필터링](![신고처리](https://github.com/user-attachments/assets/9b13ea29-1a2f-4508-a4e4-2dc80cc8abe6))" width="80%"/>
+	![Image](https://github.com/user-attachments/assets/66647316-24f1-4bfb-b506-68b3885b680c)
 
 </details>
-![신고처리](https://github.com/user-attachments/assets/61c8735a-a44f-4bf1-8379-f620190ee6ff)
 
 ---
 
