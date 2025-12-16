@@ -1,0 +1,65 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mariadb-pvc
+  labels:
+    app: cherrybooker-mariadb
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cherrybooker-mariadb
+  labels:
+    app: cherrybooker-mariadb
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cherrybooker-mariadb
+  template:
+    metadata:
+      labels:
+        app: cherrybooker-mariadb
+    spec:
+      containers:
+        - name: mariadb
+          image: cherrybooker-mariadb:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 3306
+          env:
+            - name: MARIADB_ROOT_PASSWORD
+              value: valen777
+            - name: MARIADB_DATABASE
+              value: test
+            - name: MARIADB_USER
+              value: penrose
+            - name: MARIADB_PASSWORD
+              value: valen777
+          volumeMounts:
+            - name: mariadb-data
+              mountPath: /var/lib/mysql
+      volumes:
+        - name: mariadb-data
+          persistentVolumeClaim:
+            claimName: mariadb-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cherry-booker-main-db
+  labels:
+    app: cherrybooker-mariadb
+spec:
+  selector:
+    app: cherrybooker-mariadb
+  ports:
+    - name: mysql
+      port: 3336
+      targetPort: 3306

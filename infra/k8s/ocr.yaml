@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cherrybooker-ocr
+  labels:
+    app: cherrybooker-ocr
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cherrybooker-ocr
+  template:
+    metadata:
+      labels:
+        app: cherrybooker-ocr
+    spec:
+      containers:
+        - name: ocr
+          image: cherrybooker-ocr:dev
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8000
+          readinessProbe:
+            tcpSocket:
+              port: 8000
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket:
+              port: 8000
+            initialDelaySeconds: 30
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: 200m
+              memory: 512Mi
+            limits:
+              cpu: 500m
+              memory: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cherrybooker-ocr
+  labels:
+    app: cherrybooker-ocr
+spec:
+  selector:
+    app: cherrybooker-ocr
+  ports:
+    - name: http
+      port: 8000
+      targetPort: 8000

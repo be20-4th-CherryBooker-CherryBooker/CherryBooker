@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cherrybooker-nginx
+  labels:
+    app: cherrybooker-nginx
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: cherrybooker-nginx
+  template:
+    metadata:
+      labels:
+        app: cherrybooker-nginx
+    spec:
+      containers:
+        - name: nginx
+          image: cherrybooker-nginx:dev
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 30
+            periodSeconds: 20
+          volumeMounts:
+            - name: shared-uploads
+              mountPath: /var/www/uploads
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 300m
+              memory: 256Mi
+      volumes:
+        - name: shared-uploads
+          persistentVolumeClaim:
+            claimName: backend-uploads-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cherrybooker-nginx
+  labels:
+    app: cherrybooker-nginx
+spec:
+  selector:
+    app: cherrybooker-nginx
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
+  type: LoadBalancer
